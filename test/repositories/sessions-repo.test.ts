@@ -3,11 +3,10 @@ import {createSessionsRepo} from '../../app/repositories/inmemory/sessions-repo'
 import * as Faker from 'faker'
 
 const createSession = (): Session=>({
-  currentRound: Faker.random.number(),
   id: Faker.random.uuid(),
-  questionsShift: Faker.random.number(),
-  state: Faker.random.arrayElement([SessionState.newRound, SessionState.over]),
-  updateDate: Faker.date.recent()
+  state: SessionState.pendingPlayersToJoin,
+  players: [],
+  questions: []
 })
 
 describe('sessions-repo', ()=>{
