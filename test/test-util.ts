@@ -1,6 +1,9 @@
 import * as Faker from 'faker'
 import { Session, SessionState, NewSession, InProgressSession } from '../app/model/session'
-import { } from '../app/model/response'
+import {Response } from '../app/model/response'
+import { SessionsRepo, QuestionsRepo, ResponsesRepo } from '../app/repositories/types'
+import { Question } from '../app/model/question'
+import { DateTimeService } from '../app/infra/date-time-service'
 interface CreateNewSessionParams {
   id?: string
   players?: string[]
@@ -58,4 +61,65 @@ export const createResponse = ({
   sessionId,
   round,
   answerId
+})
+
+
+
+interface CreateSessionsRepoParams {
+  saveSession?: (Session: Session) => Promise<boolean>
+  getSession?: (id: string) => Promise<Session | undefined>
+}
+
+export const createSessionsRepo = ({
+  getSession = jest.fn(),
+  saveSession = jest.fn()
+}: CreateSessionsRepoParams): SessionsRepo => ({
+  getSession,
+  saveSession
+})
+
+
+interface CreateQuestionsRepoParams {
+  saveQuestion?: (question: Question) => Promise<boolean>
+  getQuestion?: (id: string) => Promise<Question | undefined>
+  getQuestionsCount?: () => Promise<number>
+  getRandomQuestions?: (count: number) => Promise<string[]>
+}
+
+export const createQuestionsRepo = ({
+  getQuestion = jest.fn(),
+  getQuestionsCount = jest.fn(),
+  getRandomQuestions = jest.fn(),
+  saveQuestion = jest.fn()
+}: CreateQuestionsRepoParams): QuestionsRepo => ({
+  getQuestion,
+  getQuestionsCount,
+  getRandomQuestions,
+  saveQuestion
+})
+
+
+interface CreateResponsesRepoParams {
+  saveResponse?: (response: Response) => Promise<boolean>
+  getSessionRoundResponses?: (sessionId: string, round: number) => Promise<Response[]>
+}
+
+export const createResponsesRepo = ({
+  getSessionRoundResponses = jest.fn(),
+  saveResponse = jest.fn()
+}: CreateResponsesRepoParams): ResponsesRepo => ({
+  saveResponse,
+  getSessionRoundResponses
+})
+
+
+
+interface CreateDateTimeServiceParams {
+  now?: () => Date
+}
+
+export const createDateTimeService = ({
+now = jest.fn()
+}: CreateDateTimeServiceParams): DateTimeService => ({
+  now
 })

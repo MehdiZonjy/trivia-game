@@ -1,6 +1,6 @@
 import * as _ from 'lodash'
 import * as QuestionModel from './question'
-import {Response} from './response'
+import { Response } from './response'
 export enum SessionState {
   pendingPlayersToJoin = "pendingPlayersToJoin", // session was just created and pending for players to join 
   inProgress = "inProgress", // waiting 
@@ -32,6 +32,7 @@ export interface NewSession {
 
 
 export const ROUND_DIRATION = 10 * 1000 // 10 seconds
+export const START_SESSION_THRESHOLD = 4
 
 export interface CreateSessionCmd {
   questions: string[]
@@ -60,7 +61,7 @@ export const createSession = (cmd: CreateSessionCmd): NewSession => ({
 
 export const isSessionNew = (session: Session): session is NewSession => session.state === SessionState.pendingPlayersToJoin
 export const isSessionInProgress = (session: Session): session is InProgressSession => session.state === SessionState.inProgress
-export const  isSessionOver = (session: Session): session is FinishedSession => session.state === SessionState.over
+export const isSessionOver = (session: Session): session is FinishedSession => session.state === SessionState.over
 
 
 export const startSession = (session: NewSession, cmd: StartSessionCmd): InProgressSession => {
@@ -95,7 +96,7 @@ export const shouldMoveToNextRound = (session: InProgressSession): session is In
     now.valueOf() > session.roundStartedAt.valueOf() + ROUND_DIRATION)
 }
 
-export const addPlayer = (session: NewSession, cmd: AddPlayerToSessionCmd): Session => {
+export const addPlayer = (session: NewSession, cmd: AddPlayerToSessionCmd): NewSession => {
   return {
     ...session,
     players: [...session.players, cmd.playerId],
@@ -117,11 +118,11 @@ export const activeQuestion = (session: InProgressSession): string => {
   return session.questions[session.currentRound % session.questions.length]
 }
 
-export const eliminateDisqualifedPlayers = ( session: InProgressSession, activeQuestion: QuestionModel.Question,  responses: Response[]): InProgressSession => {
+export const eliminateDisqualifedPlayers = (session: InProgressSession, activeQuestion: QuestionModel.Question, responses: Response[]): InProgressSession => {
   const playersWithInvalidResponses = responses.filter(r => !QuestionModel.validateAnswer(activeQuestion, r.answerId)).map(p => p.playerId)
 
   const activePlayers = responses.map(p => p.playerId)
-  const idlePlayers = session.players.filter( p => activePlayers.indexOf(p) < 0 )
+  const idlePlayers = session.players.filter(p => activePlayers.indexOf(p) < 0)
 
   const disqualifiedPlayers = idlePlayers.concat(playersWithInvalidResponses)
 
@@ -132,4 +133,4 @@ export const eliminateDisqualifedPlayers = ( session: InProgressSession, activeQ
 
 export const isGameOver = (session: InProgressSession): boolean => session.players.length <= 1
 
-
+export const canStartSession = (session: NewSession): boolean => session.players.length >= START_SESSION_THRESHOLD

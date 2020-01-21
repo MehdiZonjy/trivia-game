@@ -1,6 +1,5 @@
 import * as JWT from 'jsonwebtoken'
-import { jestPreset } from 'ts-jest'
-interface AuthService {
+export interface AuthService {
   createSessionToken: (sessionId: string, playerId: string) => string
   decodeSessionToken: (token: string) => PlayerIdentity | undefined
 }

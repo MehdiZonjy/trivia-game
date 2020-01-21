@@ -19,7 +19,3 @@ export interface ResponsesRepo {
   getSessionRoundResponses: (sessionId: string, round: number) => Promise<Response[]>
 }
 
-export type IdGenerator = () => string
-export interface DateTimeService {
-  now: ()=> Date
-} 
