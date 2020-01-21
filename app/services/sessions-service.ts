@@ -52,12 +52,11 @@ interface CreateSessionsServiceParams {
   idGenerator: IdGenerator
   dateTimeService: DateTimeService
   responsesRepo: ResponsesRepo
-  authService: AuthService
 }
 const MAX_QUESTIONS_PER_SESSION = 10
 
 export const createSessionsService = (params: CreateSessionsServiceParams): SessionsService => {
-  const { authService, dateTimeService, responsesRepo, questionsRepo, sessionsRepo, idGenerator } = params
+  const { dateTimeService, responsesRepo, questionsRepo, sessionsRepo, idGenerator } = params
   const createSession = async (): Promise<SessionCreated> => {
     const sessionId = idGenerator()
     const questions = await questionsRepo.getRandomQuestions(MAX_QUESTIONS_PER_SESSION)
@@ -84,10 +83,10 @@ export const createSessionsService = (params: CreateSessionsServiceParams): Sess
     if (SessionModel.canStartSession(newSession)) {
       const inProgressSession = SessionModel.startSession(newSession, { date: dateTimeService.now() })
       await sessionsRepo.saveSession(inProgressSession)
-      return { playerId, sessionId, sessionState: inProgressSession.state }
+      return { playerId, sessionId, sessionState: inProgressSession.state , playersCount: inProgressSession.players.length}
     } else {
       await sessionsRepo.saveSession(newSession)
-      return { playerId, sessionId, sessionState: newSession.state }
+      return { playerId, sessionId, sessionState: newSession.state,  playersCount: newSession.players.length }
     }
 
   }

@@ -10,7 +10,7 @@ const authService =  createAuthService({jwtSecret: "hello"})
 
 describe('sessions-service', ()=>{
   describe('createSession', ()=>{
-    it('should create a new session, and return a valid JWT for a player', async ()=>{
+    it('should create a new session', async ()=>{
       const sessionsRepo = TestUtils.createSessionsRepo({
         saveSession: jest.fn().mockResolvedValue(true)
       })
@@ -26,7 +26,6 @@ describe('sessions-service', ()=>{
 
 
       const svc = createSessionsService({
-        authService,
         idGenerator,
         questionsRepo,
         sessionsRepo,
@@ -34,16 +33,16 @@ describe('sessions-service', ()=>{
         responsesRepo: TestUtils.createResponsesRepo({})
       })
 
-      const token = await svc.createSession()
+      const sessionCreated = await svc.createSession()
 
       expect(sessionsRepo.saveSession).toHaveBeenCalledWith({
         id: sessionId,
         state: SessionState.pendingPlayersToJoin,
         questions,
-        players: [playerId]
+        players: [{playerId, disqualified: false}]
       })
 
-      expect(authService.decodeSessionToken(token)).toEqual({
+      expect(sessionCreated).toEqual({
         playerId,
         sessionId
       })
@@ -66,7 +65,6 @@ describe('sessions-service', ()=>{
 
 
       const svc = createSessionsService({
-        authService,
         idGenerator,
         questionsRepo: TestUtils.createQuestionsRepo({}),
         sessionsRepo,
@@ -74,16 +72,18 @@ describe('sessions-service', ()=>{
         responsesRepo: TestUtils.createResponsesRepo({})
       })
 
-      const token = await svc.addPlayer(newSession.id)
+      const playerAdded = await svc.addPlayer(newSession.id)
 
       expect(sessionsRepo.saveSession).toHaveBeenCalledWith({
         ...newSession,
-        players: [...newSession.players, playerId]
+        players: [...newSession.players, {playerId, disqualified: false}]
       })
 
-      expect(authService.decodeSessionToken(token)).toEqual({
+      expect(playerAdded).toEqual({
         playerId,
-        sessionId: newSession.id
+        sessionId: newSession.id,
+        sessionState: SessionState.pendingPlayersToJoin,
+        playersCount: newSession.players.length + 1
       })
     })
     it('should add a new player and start game when there are enough players', async ()=>{
@@ -106,7 +106,6 @@ describe('sessions-service', ()=>{
 
 
       const svc = createSessionsService({
-        authService,
         idGenerator,
         questionsRepo: TestUtils.createQuestionsRepo({}),
         sessionsRepo,
@@ -114,20 +113,22 @@ describe('sessions-service', ()=>{
         responsesRepo: TestUtils.createResponsesRepo({})
       })
 
-      const token = await svc.addPlayer(newSession.id)
+      const playerAddedToSession = await svc.addPlayer(newSession.id)
 
       expect(sessionsRepo.saveSession).toHaveBeenCalledWith({
         id: newSession.id,
         currentRound: 0,
         questions: newSession.questions,
-        players: [...newSession.players, playerId],
+        players: [...newSession.players, {playerId, disqualified: false}],
         roundStartedAt,
         state: SessionState.inProgress
       })
 
-      expect(authService.decodeSessionToken(token)).toEqual({
+      expect(playerAddedToSession).toEqual({
         playerId,
-        sessionId: newSession.id
+        sessionId: newSession.id,
+        sessionState: SessionState.inProgress,
+        playersCount: newSession.players.length + 1
       })
     })
   })
@@ -142,7 +143,7 @@ describe('sessions-service', ()=>{
       const inProgressSession = TestUtils.createInProgressSession({
         questions: [question.id],
         roundStartedAt: Faker.date.past(),
-        players: [inactivePlayer, playerWhoAnsweredCorrectly1, playerWhoAnsweredCorrectly2, playerWhoAnsweredInCorrectly]
+        qualifiedPlayers: [inactivePlayer, playerWhoAnsweredCorrectly1, playerWhoAnsweredCorrectly2],
       })
 
       const invalidResponse = TestUtils.createResponse({
@@ -189,7 +190,6 @@ describe('sessions-service', ()=>{
 
 
       const svc = createSessionsService({
-        authService,
         idGenerator: jest.fn(),
         questionsRepo,
         sessionsRepo,
@@ -202,7 +202,10 @@ describe('sessions-service', ()=>{
       expect(sessionsRepo.saveSession).toHaveBeenCalledWith({
         ...inProgressSession,
         currentRound: inProgressSession.currentRound + 1,
-        players: [playerWhoAnsweredCorrectly1, playerWhoAnsweredCorrectly2],
+        players: [
+          TestUtils.createDisqualifiedPlayer(inactivePlayer),
+          TestUtils.createQualifiedPlayer(playerWhoAnsweredCorrectly1), 
+          TestUtils.createQualifiedPlayer(playerWhoAnsweredCorrectly2)],
         roundStartedAt: now
       })
 
@@ -216,7 +219,7 @@ describe('sessions-service', ()=>{
       const inProgressSession = TestUtils.createInProgressSession({
         questions: [question.id],
         roundStartedAt: Faker.date.past(),
-        players: [inactivePlayer, playerWhoAnsweredCorrectly, playerWhoAnsweredInCorrectly]
+        qualifiedPlayers: [inactivePlayer, playerWhoAnsweredCorrectly, playerWhoAnsweredInCorrectly]
       })
 
       const invalidResponse = TestUtils.createResponse({
@@ -255,7 +258,6 @@ describe('sessions-service', ()=>{
 
 
       const svc = createSessionsService({
-        authService,
         idGenerator: jest.fn(),
         questionsRepo,
         sessionsRepo,

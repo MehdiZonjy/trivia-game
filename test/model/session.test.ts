@@ -1,7 +1,7 @@
 import { SessionState, Session } from '../../app/model/session'
 import * as SessionModel from '../../app/model/session'
 import * as Faker from 'faker'
-import {createInProgressSession, createNewSession} from '../test-util'
+import { createInProgressSession, createNewSession } from '../test-util'
 
 describe('session model', () => {
   describe('createSession', () => {
@@ -40,7 +40,7 @@ describe('session model', () => {
     it('shuold move to next round', () => {
 
       const currentRound = 3
-      const session = createInProgressSession({ players: [], questions: [], currentRound })
+      const session = createInProgressSession({ questions: [], currentRound })
       const now = new Date()
       expect(SessionModel.moveToNextRound(session, { date: now }))
         .toEqual({
@@ -58,26 +58,28 @@ describe('session model', () => {
       expect(SessionModel.shouldMoveToNextRound(session)).toBeTruthy()
     })
     it('should return false when roundStartedAt is less than ROUND_DURATION', () => {
-      const session = createInProgressSession({roundStartedAt: new Date()})
+      const session = createInProgressSession({ roundStartedAt: new Date() })
       expect(SessionModel.shouldMoveToNextRound(session)).toBeFalsy()
     })
   })
-  describe('addPlayer', ()=>{
-    it('should add player if in PendingPlayersToJoin state', ()=>{
-      const session = createNewSession({players: []})
-      expect(SessionModel.addPlayer(session, {playerId: 'player1'})).toEqual({
+  describe('addPlayer', () => {
+    it('should add player if in PendingPlayersToJoin state', () => {
+      const session = createNewSession({ players: [] })
+      expect(SessionModel.addPlayer(session, { playerId: 'player1' })).toEqual({
         ...session,
-        players: ['player1']
+        players: [{ playerId: 'player1', disqualified: false }]
       })
     })
   })
 
-  describe('eliminatePlayer', ()=>{
-    it('should eliminate player from inProgress session', ()=>{
-      const session = createInProgressSession({players: ['player1', 'player2']})
-      expect(SessionModel.eliminatePlayer(session, {playerId: 'player2'})).toEqual({
+  describe.only('eliminatePlayer', () => {
+    it.only('should eliminate player from inProgress session', () => {
+      const session = createInProgressSession({ qualifiedPlayers: ['player1', 'player2'] })
+      expect(SessionModel.eliminatePlayer(session, { playerId: 'player2' })).toEqual({
         ...session,
-        players: ['player1']
+        players: [
+          { playerId: 'player1', disqualified: false },
+          { playerId: 'player2', disqualified: true }]
       })
     })
   })

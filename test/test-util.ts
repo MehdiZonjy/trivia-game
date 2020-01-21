@@ -1,5 +1,5 @@
 import * as Faker from 'faker'
-import { Session, SessionState, NewSession, InProgressSession } from '../app/model/session'
+import { Session, SessionState, NewSession, InProgressSession, Player } from '../app/model/session'
 import { Response } from '../app/model/response'
 import { SessionsRepo, QuestionsRepo, ResponsesRepo } from '../app/repositories/types'
 import { Question, Answer } from '../app/model/question'
@@ -17,7 +17,7 @@ export const createNewSession = ({
 }: CreateNewSessionParams): NewSession => ({
   id,
   state: SessionState.pendingPlayersToJoin,
-  players,
+  players: players.map(createQualifiedPlayer),
   questions
 })
 
@@ -26,20 +26,22 @@ interface CreateInProgressSessionParams {
   id?: string
   currentRound?: number
   questions?: string[]
-  players?: string[]
+  qualifiedPlayers?: string[]
+  disqualifiedPlayers?: string[]
   roundStartedAt?: Date
 }
 
 
 export const createInProgressSession = ({
   roundStartedAt = new Date(),
-  players = [],
+  qualifiedPlayers = [],
+  disqualifiedPlayers = [],
   questions = [],
   currentRound = 0 }: CreateInProgressSessionParams): InProgressSession => ({
     id: Faker.random.uuid(),
     currentRound,
     questions: questions,
-    players: players,
+    players: [...qualifiedPlayers.map(createQualifiedPlayer), ...disqualifiedPlayers.map(createDisqualifiedPlayer)],
     roundStartedAt,
     state: SessionState.inProgress
   })
@@ -151,4 +153,14 @@ export const createAnswer = ({ isCorrect = false }: CreateAnswerParams): Answer 
   id: Faker.random.uuid(),
   isCorrect,
   text: Faker.random.words(3)
+})
+
+export const createQualifiedPlayer = (playerId: string): Player => ({
+  playerId,
+  disqualified: false
+})
+
+export const createDisqualifiedPlayer = (playerId: string): Player => ({
+  playerId,
+  disqualified: true
 })
