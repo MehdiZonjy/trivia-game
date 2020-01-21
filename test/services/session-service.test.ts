@@ -53,7 +53,7 @@ describe('sessions-service', ()=>{
 
   describe('addPlayer', ()=>{
     it('should add new player and keep session in NewSession state if there are not enough players', async ()=>{
-      const newSession = TestUtils.createNewSession({})
+      const newSession = TestUtils.createNewSession({players: []})
 
       const sessionsRepo = TestUtils.createSessionsRepo({
         saveSession: jest.fn().mockResolvedValue(true),

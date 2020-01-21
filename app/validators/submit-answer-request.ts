@@ -1,10 +1,11 @@
 import Ajv from 'ajv'
+import { Logger } from '../utils/logger'
 const Schema = {
   "type": "object",
   "properties": {
-    "round": { "type": "number"},
+    "round": { "type": "number" },
     "answerId": { "type": "string" },
-    "questionId": {"type": "string"}
+    "questionId": { "type": "string" }
   },
   "required": ["round", "answerId", "questionId"],
   "additionalProperties": false
@@ -19,10 +20,22 @@ interface SubmitAnswerRequest {
   questionId: string
 }
 
-export const validate = (obj: any): obj is SubmitAnswerRequest => {
+interface ValidationResult {
+  result?: SubmitAnswerRequest
+  error: string
+}
+
+type SubmitAnswerRequestValidator = (obj: any) => ValidationResult
+
+export const createValidator = (logger: Logger): SubmitAnswerRequestValidator => (obj: any): ValidationResult => {
   const valid = validator(obj)
-  if(!valid) {
-    // log errors
+  const errors = JSON.stringify(validator.errors, null)
+
+  if (!valid) {
+    logger.info("Invalid Request", errors)
   }
-  return valid as boolean
+  return {
+    result: valid ? obj : undefined,
+    error: errors
+  }
 }  

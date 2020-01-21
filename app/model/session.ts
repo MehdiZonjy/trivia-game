@@ -37,7 +37,7 @@ export interface NewSession {
 
 
 export const ROUND_DIRATION = 10 * 1000 // 10 seconds
-export const START_SESSION_THRESHOLD = 3
+export const START_SESSION_THRESHOLD = 2
 
 export interface CreateSessionCmd {
   questions: string[]

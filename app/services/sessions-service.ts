@@ -28,10 +28,20 @@ interface PlayerAddedToSession {
 
 interface InProgressSessionDTO {
   sessionId: string
-  question: Question
+  question: QuestionDTO
   round: number
   remainingPlayers: number
   state: SessionState.inProgress
+}
+interface QuestionDTO {
+  id: string
+  text: string
+  answers: AnswerDTO[]
+}
+
+interface AnswerDTO {
+  id: string,
+  text: string
 }
 interface NewSessionDTO {
   sessionId: string
@@ -81,14 +91,14 @@ export const createSessionsService = (params: CreateSessionsServiceParams): Sess
     }
     const playerId = idGenerator()
     const newSession = SessionModel.addPlayer(session, { playerId })
-    logger.info('added player to session', {sessionId, playerId})
+    logger.info('added player to session', { sessionId, playerId })
     if (SessionModel.canStartSession(newSession)) {
-      logger.info('Starting Session', {sessionId})
+      logger.info('Starting Session', { sessionId })
       const inProgressSession = SessionModel.startSession(newSession, { date: dateTimeService.now() })
       await sessionsRepo.saveSession(inProgressSession)
       return { playerId, sessionId, sessionState: inProgressSession.state, playersCount: inProgressSession.players.length }
     } else {
-      logger.info('session needs more players', {sessionId, playersCount: newSession.players.length})
+      logger.info('session needs more players', { sessionId, playersCount: newSession.players.length })
       await sessionsRepo.saveSession(newSession)
       return { playerId, sessionId, sessionState: newSession.state, playersCount: newSession.players.length }
     }
@@ -150,11 +160,20 @@ export const createSessionsService = (params: CreateSessionsServiceParams): Sess
           throw new ResourceNotFound("Question not found", activeQuestionId)
         }
 
+        const question: QuestionDTO = {
+          id: activeQuestion.id,
+          text: activeQuestion.text,
+          answers: activeQuestion.answers.map(ans => ({
+            id: ans.id,
+            text: ans.text
+          }))
+        }
+
         return {
           state: SessionState.inProgress,
           round: session.currentRound,
           sessionId: session.id,
-          question: activeQuestion,
+          question,
           remainingPlayers: session.players.length//TODO fix me
         }
       }
