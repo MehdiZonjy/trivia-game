@@ -1,15 +1,50 @@
-import { Session } from "../model/session";
+import { Session, SessionState } from "../model/session";
 import { SessionsRepo, QuestionsRepo, ResponsesRepo } from "../repositories/types";
 import * as SessionModel from '../model/session'
 import { AuthService } from "./auth-service"
-import {DateTimeService} from '../infra/date-time-service'
-import {IdGenerator} from '../infra/id-generator'
+import { DateTimeService } from '../infra/date-time-service'
+import { IdGenerator } from '../infra/id-generator'
+import { Question } from "../model/question";
 
 interface SessionsService {
-  createSession: () => Promise<string>
-  addPlayer: (sessionId: string) => Promise<string>
+  createSession: () => Promise<SessionCreated>
+  addPlayer: (sessionId: string) => Promise<PlayerAddedToSession>
   moveToNextRound: (sessionId: string) => Promise<Session>
+  getSessionState: (sessionId: string) => Promise<SessionStateDTO>
 }
+
+interface SessionCreated {
+  sessionId: string
+  playerId: string
+}
+
+interface PlayerAddedToSession {
+  playerId: string
+  sessionId: string
+  playersCount: number
+  sessionState: SessionState
+}
+
+interface InProgressSessionDTO {
+  sessionId: string
+  question: Question
+  round: number
+  remainingPlayers: number
+  state: SessionState.inProgress
+}
+interface NewSessionDTO {
+  sessionId: string
+  playersCount: number
+  state: SessionState.pendingPlayersToJoin
+}
+
+interface FinishedSessionDTO {
+  sessionId: string
+  winner?: string
+  state: SessionState.over
+}
+
+export type SessionStateDTO = InProgressSessionDTO | NewSessionDTO | FinishedSessionDTO
 
 interface CreateSessionsServiceParams {
   sessionsRepo: SessionsRepo
@@ -23,20 +58,19 @@ const MAX_QUESTIONS_PER_SESSION = 10
 
 export const createSessionsService = (params: CreateSessionsServiceParams): SessionsService => {
   const { authService, dateTimeService, responsesRepo, questionsRepo, sessionsRepo, idGenerator } = params
-  const createSession = async () => {
-    const id = idGenerator()
+  const createSession = async (): Promise<SessionCreated> => {
+    const sessionId = idGenerator()
     const questions = await questionsRepo.getRandomQuestions(MAX_QUESTIONS_PER_SESSION)
-    const session = SessionModel.createSession({ id, questions })
-    const newPlayer = idGenerator()
+    const session = SessionModel.createSession({ id: sessionId, questions })
+    const playerId = idGenerator()
 
-    const sessionWithPlayer = SessionModel.addPlayer(session, { playerId: newPlayer })
+    const sessionWithPlayer = SessionModel.addPlayer(session, { playerId: playerId })
     await sessionsRepo.saveSession(sessionWithPlayer)
 
-    const playerToken = authService.createSessionToken(sessionWithPlayer.id, newPlayer)
-    return playerToken
+    return { playerId, sessionId }
   }
 
-  const addPlayer = async (sessionId: string): Promise<string> => {
+  const addPlayer = async (sessionId: string): Promise<PlayerAddedToSession> => {
     const session = await sessionsRepo.getSession(sessionId)
     if (!session) {
       throw new Error("Session not found")
@@ -46,15 +80,16 @@ export const createSessionsService = (params: CreateSessionsServiceParams): Sess
     }
     const playerId = idGenerator()
     const newSession = SessionModel.addPlayer(session, { playerId })
-    const playerToken = authService.createSessionToken(sessionId, playerId)
 
     if (SessionModel.canStartSession(newSession)) {
       const inProgressSession = SessionModel.startSession(newSession, { date: dateTimeService.now() })
       await sessionsRepo.saveSession(inProgressSession)
+      return { playerId, sessionId, sessionState: inProgressSession.state }
     } else {
       await sessionsRepo.saveSession(newSession)
+      return { playerId, sessionId, sessionState: newSession.state }
     }
-    return playerToken
+
   }
 
 
@@ -88,5 +123,46 @@ export const createSessionsService = (params: CreateSessionsServiceParams): Sess
     }
   }
 
-  return { addPlayer, createSession, moveToNextRound }
+
+
+  const getSessionState = async (sessionId: string): Promise<SessionStateDTO> => {
+    const session = await sessionsRepo.getSession(sessionId)
+
+    if (!session) {
+      throw new Error("Session not found")
+    }
+
+    switch (session.state) {
+      case SessionState.pendingPlayersToJoin: {
+        return {
+          state: SessionState.pendingPlayersToJoin,
+          sessionId: session.id,
+          playersCount: session.players.length // TODO fix me
+        }
+      }
+      case SessionState.inProgress: {
+        const activeQuestion = await questionsRepo.getQuestion(SessionModel.activeQuestion(session))
+        if (!activeQuestion) {
+          throw new Error("Question not found")
+        }
+
+        return {
+          state: SessionState.inProgress,
+          round: session.currentRound,
+          sessionId: session.id,
+          question: activeQuestion,
+          remainingPlayers: session.players.length//TODO fix me
+        }
+      }
+      case SessionState.over: {
+        return {
+          state: SessionState.over,
+          winner: session.winner,
+          sessionId: session.id
+        }
+      }
+    }
+
+  }
+  return { addPlayer, createSession, moveToNextRound, getSessionState }
 }

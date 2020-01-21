@@ -3,7 +3,7 @@ export interface DateTimeService {
 }
 
 
-export const createSvc = (): DateTimeService => {
+export const createDateTimeService = (): DateTimeService => {
   const now = () => new Date()
   return { now }
 }
