@@ -1,8 +1,8 @@
 import * as Faker from 'faker'
 import { Session, SessionState, NewSession, InProgressSession } from '../app/model/session'
-import {Response } from '../app/model/response'
+import { Response } from '../app/model/response'
 import { SessionsRepo, QuestionsRepo, ResponsesRepo } from '../app/repositories/types'
-import { Question } from '../app/model/question'
+import { Question, Answer } from '../app/model/question'
 import { DateTimeService } from '../app/infra/date-time-service'
 interface CreateNewSessionParams {
   id?: string
@@ -119,7 +119,36 @@ interface CreateDateTimeServiceParams {
 }
 
 export const createDateTimeService = ({
-now = jest.fn()
+  now = jest.fn()
 }: CreateDateTimeServiceParams): DateTimeService => ({
   now
+})
+
+
+interface CreateQuestionParms {
+  id?: string
+  answers?: Answer[]
+}
+
+
+
+export const createQuestion = ({
+  id = Faker.random.uuid(),
+  answers = [createAnswer({ isCorrect: true }), createAnswer({}), createAnswer({})]
+
+}: CreateQuestionParms): Question => ({
+  answers,
+  id,
+  text: Faker.random.words(3)
+})
+
+
+interface CreateAnswerParams {
+  isCorrect?: boolean
+}
+
+export const createAnswer = ({ isCorrect = false }: CreateAnswerParams): Answer => ({
+  id: Faker.random.uuid(),
+  isCorrect,
+  text: Faker.random.words(3)
 })

@@ -15,14 +15,14 @@ interface CreateSessionsServiceParams {
   sessionsRepo: SessionsRepo
   questionsRepo: QuestionsRepo
   idGenerator: IdGenerator
-  dateTimeServie: DateTimeService
+  dateTimeService: DateTimeService
   responsesRepo: ResponsesRepo
   authService: AuthService
 }
 const MAX_QUESTIONS_PER_SESSION = 10
 
 export const createSessionsService = (params: CreateSessionsServiceParams): SessionsService => {
-  const { authService, dateTimeServie, responsesRepo, questionsRepo, sessionsRepo, idGenerator } = params
+  const { authService, dateTimeService, responsesRepo, questionsRepo, sessionsRepo, idGenerator } = params
   const createSession = async () => {
     const id = idGenerator()
     const questions = await questionsRepo.getRandomQuestions(MAX_QUESTIONS_PER_SESSION)
@@ -49,7 +49,7 @@ export const createSessionsService = (params: CreateSessionsServiceParams): Sess
     const playerToken = authService.createSessionToken(sessionId, playerId)
 
     if (SessionModel.canStartSession(newSession)) {
-      const inProgressSession = SessionModel.startSession(newSession, { date: dateTimeServie.now() })
+      const inProgressSession = SessionModel.startSession(newSession, { date: dateTimeService.now() })
       await sessionsRepo.saveSession(inProgressSession)
     } else {
       await sessionsRepo.saveSession(newSession)
@@ -82,7 +82,7 @@ export const createSessionsService = (params: CreateSessionsServiceParams): Sess
       await sessionsRepo.saveSession(gameOverSession)
       return gameOverSession
     } else {
-      const nextRoundSession = SessionModel.moveToNextRound(preNewReoundSession, { date: dateTimeServie.now() })
+      const nextRoundSession = SessionModel.moveToNextRound(preNewReoundSession, { date: dateTimeService.now() })
       await sessionsRepo.saveSession(nextRoundSession)
       return nextRoundSession
     }
