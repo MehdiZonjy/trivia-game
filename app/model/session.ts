@@ -2,7 +2,7 @@ import * as _ from 'lodash'
 import * as QuestionModel from './question'
 import { Response } from './response'
 export enum SessionState {
-  pendingPlayersToJoin = "pendingPlayersToJoin", // session was just created and pending for players to join 
+  newSession = "newSession", // session was just created and pending for players to join 
   inProgress = "inProgress", // waiting 
   over = "over"
 }
@@ -30,14 +30,14 @@ export interface FinishedSession {
 }
 export interface NewSession {
   id: string
-  state: SessionState.pendingPlayersToJoin
+  state: SessionState.newSession
   questions: string[]
   players: Player[]
 }
 
 
 export const ROUND_DIRATION = 10 * 1000 // 10 seconds
-export const START_SESSION_THRESHOLD = 4
+export const START_SESSION_THRESHOLD = 3
 
 export interface CreateSessionCmd {
   questions: string[]
@@ -59,12 +59,12 @@ export interface EliminatePlayerCmd {
 
 export const createSession = (cmd: CreateSessionCmd): NewSession => ({
   id: cmd.id,
-  state: SessionState.pendingPlayersToJoin,
+  state: SessionState.newSession,
   questions: cmd.questions,
   players: [],
 })
 
-export const isSessionNew = (session: Session): session is NewSession => session.state === SessionState.pendingPlayersToJoin
+export const isSessionNew = (session: Session): session is NewSession => session.state === SessionState.newSession
 export const isSessionInProgress = (session: Session): session is InProgressSession => session.state === SessionState.inProgress
 export const isSessionOver = (session: Session): session is FinishedSession => session.state === SessionState.over
 
@@ -145,3 +145,19 @@ export const eliminateDisqualifedPlayers = (session: InProgressSession, activeQu
 export const isGameOver = (session: InProgressSession): boolean => session.players.filter( p => !p.disqualified).length <= 1
 
 export const canStartSession = (session: NewSession): boolean => session.players.length >= START_SESSION_THRESHOLD
+
+
+
+export enum PlayerState {
+  Qualified,
+  Disqualified,
+  NotPartOfSession
+}
+export const getPlayerState = (session: InProgressSession, playerId: string) => {
+  const player= session.players.find( p => p.playerId === playerId)
+  if (!player){
+    return PlayerState.NotPartOfSession
+  }
+
+  return player.disqualified ? PlayerState.Disqualified: PlayerState.Qualified
+}

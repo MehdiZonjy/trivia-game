@@ -11,7 +11,7 @@ describe('session model', () => {
 
       expect(SessionModel.createSession({ id, questions })).toEqual({
         id,
-        state: SessionState.pendingPlayersToJoin,
+        state: SessionState.newSession,
         questions,
         players: []
       })

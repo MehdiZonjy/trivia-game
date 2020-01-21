@@ -1,10 +1,11 @@
 import { Session, SessionState } from "../model/session";
 import { SessionsRepo, QuestionsRepo, ResponsesRepo } from "../repositories/types";
 import * as SessionModel from '../model/session'
-import { AuthService } from "./auth-service"
 import { DateTimeService } from '../infra/date-time-service'
 import { IdGenerator } from '../infra/id-generator'
 import { Question } from "../model/question";
+import { Logger } from "../utils/logger";
+import { ResourceNotFound, InvalidState } from "./errors";
 
 interface SessionsService {
   createSession: () => Promise<SessionCreated>
@@ -35,7 +36,7 @@ interface InProgressSessionDTO {
 interface NewSessionDTO {
   sessionId: string
   playersCount: number
-  state: SessionState.pendingPlayersToJoin
+  state: SessionState.newSession
 }
 
 interface FinishedSessionDTO {
@@ -52,11 +53,12 @@ interface CreateSessionsServiceParams {
   idGenerator: IdGenerator
   dateTimeService: DateTimeService
   responsesRepo: ResponsesRepo
+  logger: Logger
 }
 const MAX_QUESTIONS_PER_SESSION = 10
 
 export const createSessionsService = (params: CreateSessionsServiceParams): SessionsService => {
-  const { dateTimeService, responsesRepo, questionsRepo, sessionsRepo, idGenerator } = params
+  const { dateTimeService, responsesRepo, questionsRepo, sessionsRepo, idGenerator, logger } = params
   const createSession = async (): Promise<SessionCreated> => {
     const sessionId = idGenerator()
     const questions = await questionsRepo.getRandomQuestions(MAX_QUESTIONS_PER_SESSION)
@@ -65,28 +67,30 @@ export const createSessionsService = (params: CreateSessionsServiceParams): Sess
 
     const sessionWithPlayer = SessionModel.addPlayer(session, { playerId: playerId })
     await sessionsRepo.saveSession(sessionWithPlayer)
-
+    logger.info('created a new session', { sessionId, playerId })
     return { playerId, sessionId }
   }
 
   const addPlayer = async (sessionId: string): Promise<PlayerAddedToSession> => {
     const session = await sessionsRepo.getSession(sessionId)
     if (!session) {
-      throw new Error("Session not found")
+      throw new ResourceNotFound("Session not found", sessionId)
     }
     if (!SessionModel.isSessionNew(session)) {
-      throw new Error("session is in progress or over")
+      throw new InvalidState("session is in progress or over", { sessionId, state: session.state })
     }
     const playerId = idGenerator()
     const newSession = SessionModel.addPlayer(session, { playerId })
-
+    logger.info('added player to session', {sessionId, playerId})
     if (SessionModel.canStartSession(newSession)) {
+      logger.info('Starting Session', {sessionId})
       const inProgressSession = SessionModel.startSession(newSession, { date: dateTimeService.now() })
       await sessionsRepo.saveSession(inProgressSession)
-      return { playerId, sessionId, sessionState: inProgressSession.state , playersCount: inProgressSession.players.length}
+      return { playerId, sessionId, sessionState: inProgressSession.state, playersCount: inProgressSession.players.length }
     } else {
+      logger.info('session needs more players', {sessionId, playersCount: newSession.players.length})
       await sessionsRepo.saveSession(newSession)
-      return { playerId, sessionId, sessionState: newSession.state,  playersCount: newSession.players.length }
+      return { playerId, sessionId, sessionState: newSession.state, playersCount: newSession.players.length }
     }
 
   }
@@ -95,7 +99,7 @@ export const createSessionsService = (params: CreateSessionsServiceParams): Sess
   const moveToNextRound = async (sessionId: string): Promise<Session> => {
     const session = await sessionsRepo.getSession(sessionId)
     if (!session) {
-      throw new Error("Session not found")
+      throw new ResourceNotFound("Session not found", sessionId)
     }
 
     if (!SessionModel.isSessionInProgress(session) || !SessionModel.shouldMoveToNextRound(session)) {
@@ -107,7 +111,7 @@ export const createSessionsService = (params: CreateSessionsServiceParams): Sess
     const activeQuestionId = SessionModel.activeQuestion(session)
     const activeQuestion = await questionsRepo.getQuestion(activeQuestionId)
     if (!activeQuestion) {
-      throw new Error("Question not found")
+      throw new ResourceNotFound("Question not found", activeQuestionId)
     }
 
     const preNewReoundSession = SessionModel.eliminateDisqualifedPlayers(session, activeQuestion, responses)
@@ -128,21 +132,22 @@ export const createSessionsService = (params: CreateSessionsServiceParams): Sess
     const session = await sessionsRepo.getSession(sessionId)
 
     if (!session) {
-      throw new Error("Session not found")
+      throw new ResourceNotFound("Session not found", sessionId)
     }
 
     switch (session.state) {
-      case SessionState.pendingPlayersToJoin: {
+      case SessionState.newSession: {
         return {
-          state: SessionState.pendingPlayersToJoin,
+          state: SessionState.newSession,
           sessionId: session.id,
           playersCount: session.players.length // TODO fix me
         }
       }
       case SessionState.inProgress: {
-        const activeQuestion = await questionsRepo.getQuestion(SessionModel.activeQuestion(session))
+        const activeQuestionId = SessionModel.activeQuestion(session)
+        const activeQuestion = await questionsRepo.getQuestion(activeQuestionId)
         if (!activeQuestion) {
-          throw new Error("Question not found")
+          throw new ResourceNotFound("Question not found", activeQuestionId)
         }
 
         return {

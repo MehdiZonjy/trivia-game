@@ -6,8 +6,7 @@ import { SessionState } from '../../app/model/session'
 import {createAuthService} from '../../app/services/auth-service'
 import {idGenerator} from '../../app/infra/id-generator'
 
-const authService =  createAuthService({jwtSecret: "hello"})
-
+const logger = TestUtils.logger()
 describe('sessions-service', ()=>{
   describe('createSession', ()=>{
     it('should create a new session', async ()=>{
@@ -30,14 +29,15 @@ describe('sessions-service', ()=>{
         questionsRepo,
         sessionsRepo,
         dateTimeService: TestUtils.createDateTimeService({}),
-        responsesRepo: TestUtils.createResponsesRepo({})
+        responsesRepo: TestUtils.createResponsesRepo({}),
+        logger
       })
 
       const sessionCreated = await svc.createSession()
 
       expect(sessionsRepo.saveSession).toHaveBeenCalledWith({
         id: sessionId,
-        state: SessionState.pendingPlayersToJoin,
+        state: SessionState.newSession,
         questions,
         players: [{playerId, disqualified: false}]
       })
@@ -69,7 +69,8 @@ describe('sessions-service', ()=>{
         questionsRepo: TestUtils.createQuestionsRepo({}),
         sessionsRepo,
         dateTimeService: TestUtils.createDateTimeService({}),
-        responsesRepo: TestUtils.createResponsesRepo({})
+        responsesRepo: TestUtils.createResponsesRepo({}),
+        logger
       })
 
       const playerAdded = await svc.addPlayer(newSession.id)
@@ -82,7 +83,7 @@ describe('sessions-service', ()=>{
       expect(playerAdded).toEqual({
         playerId,
         sessionId: newSession.id,
-        sessionState: SessionState.pendingPlayersToJoin,
+        sessionState: SessionState.newSession,
         playersCount: newSession.players.length + 1
       })
     })
@@ -110,7 +111,8 @@ describe('sessions-service', ()=>{
         questionsRepo: TestUtils.createQuestionsRepo({}),
         sessionsRepo,
         dateTimeService,
-        responsesRepo: TestUtils.createResponsesRepo({})
+        responsesRepo: TestUtils.createResponsesRepo({}),
+        logger
       })
 
       const playerAddedToSession = await svc.addPlayer(newSession.id)
@@ -194,7 +196,8 @@ describe('sessions-service', ()=>{
         questionsRepo,
         sessionsRepo,
         dateTimeService,
-        responsesRepo
+        responsesRepo,
+        logger
       })
 
       await svc.moveToNextRound(inProgressSession.id)
@@ -262,7 +265,8 @@ describe('sessions-service', ()=>{
         questionsRepo,
         sessionsRepo,
         dateTimeService,
-        responsesRepo
+        responsesRepo,
+        logger
       })
 
       await svc.moveToNextRound(inProgressSession.id)

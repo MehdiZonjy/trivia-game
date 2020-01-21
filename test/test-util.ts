@@ -4,6 +4,7 @@ import { Response } from '../app/model/response'
 import { SessionsRepo, QuestionsRepo, ResponsesRepo } from '../app/repositories/types'
 import { Question, Answer } from '../app/model/question'
 import { DateTimeService } from '../app/infra/date-time-service'
+import { Logger } from '../app/utils/logger'
 interface CreateNewSessionParams {
   id?: string
   players?: string[]
@@ -16,7 +17,7 @@ export const createNewSession = ({
   questions = [Faker.random.uuid(), Faker.random.uuid()]
 }: CreateNewSessionParams): NewSession => ({
   id,
-  state: SessionState.pendingPlayersToJoin,
+  state: SessionState.newSession,
   players: players.map(createQualifiedPlayer),
   questions
 })
@@ -52,17 +53,20 @@ interface CreateResponseParams {
   sessionId?: string
   round?: number
   answerId?: string
+  questionId?: string
 }
 export const createResponse = ({
   answerId = Faker.random.uuid(),
   playerId = Faker.random.uuid(),
   round = Faker.random.number(),
-  sessionId = Faker.random.uuid()
+  sessionId = Faker.random.uuid(),
+  questionId = Faker.random.uuid()
 }: CreateResponseParams) => ({
   playerId,
   sessionId,
   round,
-  answerId
+  answerId,
+  questionId
 })
 
 
@@ -163,4 +167,12 @@ export const createQualifiedPlayer = (playerId: string): Player => ({
 export const createDisqualifiedPlayer = (playerId: string): Player => ({
   playerId,
   disqualified: true
+})
+
+
+export const logger = (): Logger => ({
+  info: () =>({}),
+  warn: () =>({}),
+  debug: () =>({}),
+  error: () =>({}),
 })

@@ -3,6 +3,7 @@ export interface Response {
   sessionId: string
   round: number
   answerId: string
+  questionId: string
 }
 
 
@@ -12,13 +13,15 @@ interface CreatePlayerCmd {
   playerId: string
   sessionId: string
   round: number
-  answerId: string
+  answerId: string,
+  questionId: string
 }
 
 
-const createResponse = ({answerId,playerId,round,sessionId}: CreatePlayerCmd): Response => ({
+export const createResponse = ({answerId,playerId,round,sessionId, questionId}: CreatePlayerCmd): Response => ({
   answerId,
   playerId,
   round,
-  sessionId
+  sessionId,
+  questionId
 })
