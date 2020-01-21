@@ -10,5 +10,5 @@ export interface QuestionsRepo {
   saveQuestion: (question: Question) => Promise<boolean>
   getQuestion: (id: string) => Promise<Question | undefined>
   getQuestionsCount: () => Promise<number>
-
+  getRandomQuestions:(count: number) => Promise<Question[]>
 }

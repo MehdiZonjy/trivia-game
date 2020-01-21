@@ -1,5 +1,8 @@
 import { Question } from '../../model/question'
 import { QuestionsRepo } from '../types'
+import * as _ from 'lodash'
+
+
 interface QuestionsStorage {
   [id: string]: Question
 }
@@ -20,9 +23,15 @@ export const createRepo = (): QuestionsRepo => {
   const getQuestion = async (questionId: string): Promise<Question | undefined> => {
     return storage[questionId]
   }
+
+  const getRandomQuestions = async (count: number): Promise<Question[]> => {
+    return _.sampleSize(storage, count)
+  }
+
   return {
     saveQuestion,
     getQuestion,
-    getQuestionsCount
+    getQuestionsCount,
+    getRandomQuestions
   }
 }

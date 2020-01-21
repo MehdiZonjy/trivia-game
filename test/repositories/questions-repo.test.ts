@@ -36,4 +36,18 @@ describe('questions-repo', ()=>{
 
     return expect(repo.getQuestionsCount()).resolves.toEqual(2)
   })
+
+  it('getRandomQuestions', async ()=> {
+    const repo = createRepo()
+    const q1 = createQuestion()
+    const q2 = createQuestion()
+    const q3 = createQuestion()
+    await Promise.all([
+      repo.saveQuestion(q1),
+      repo.saveQuestion(q2),
+      repo.saveQuestion(q3),
+    ])
+    const questions = await repo.getRandomQuestions(2)
+    expect(questions).toHaveLength(2)
+  })
 })
