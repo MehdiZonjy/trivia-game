@@ -1,5 +1,6 @@
 import * as _ from 'lodash'
-
+import * as QuestionModel from './question'
+import {Response} from './response'
 export enum SessionState {
   pendingPlayersToJoin = "pendingPlayersToJoin", // session was just created and pending for players to join 
   inProgress = "inProgress", // waiting 
@@ -8,7 +9,7 @@ export enum SessionState {
 
 export type Session = NewSession | FinishedSession | InProgressSession
 
-interface InProgressSession {
+export interface InProgressSession {
   id: string
   currentRound: number
   questions: string[]
@@ -17,13 +18,12 @@ interface InProgressSession {
   state: SessionState.inProgress
 }
 
-interface FinishedSession {
+export interface FinishedSession {
   id: string
-  questions: string[]
-  players: string[]
+  winner?: string
   state: SessionState.over
 }
-interface NewSession {
+export interface NewSession {
   id: string
   state: SessionState.pendingPlayersToJoin
   questions: string[]
@@ -51,17 +51,19 @@ export interface EliminatePlayerCmd {
   playerId: string
 }
 
-export const createSession = (cmd: CreateSessionCmd): Session => ({
+export const createSession = (cmd: CreateSessionCmd): NewSession => ({
   id: cmd.id,
   state: SessionState.pendingPlayersToJoin,
   questions: cmd.questions,
   players: [],
 })
 
-export const startSession = (session: Session, cmd: StartSessionCmd): Session => {
-  if (session.state !== SessionState.pendingPlayersToJoin) {
-    throw new Error("Session has started or is over")
-  }
+export const isSessionNew = (session: Session): session is NewSession => session.state === SessionState.pendingPlayersToJoin
+export const isSessionInProgress = (session: Session): session is InProgressSession => session.state === SessionState.inProgress
+export const  isSessionOver = (session: Session): session is FinishedSession => session.state === SessionState.over
+
+
+export const startSession = (session: NewSession, cmd: StartSessionCmd): InProgressSession => {
   return {
     ...session,
     currentRound: 0,
@@ -70,10 +72,14 @@ export const startSession = (session: Session, cmd: StartSessionCmd): Session =>
   }
 }
 
-export const moveToNextRound = (session: Session, cmd: MoveToNextRoundCmd): Session => {
-  if (session.state !== SessionState.inProgress) {
-    throw new Error("Session is not in progress")
-  }
+export const endSession = (session: InProgressSession): FinishedSession => ({
+  id: session.id,
+  winner: session.players[0],
+  state: SessionState.over
+})
+
+export const moveToNextRound = (session: InProgressSession, cmd: MoveToNextRoundCmd): InProgressSession => {
+
   return {
     ...session,
     state: SessionState.inProgress,
@@ -82,17 +88,14 @@ export const moveToNextRound = (session: Session, cmd: MoveToNextRoundCmd): Sess
   }
 }
 
-export const shouldMoveToNextRound = (session: Session) => {
+export const shouldMoveToNextRound = (session: InProgressSession): session is InProgressSession => {
 
   const now = new Date()
   return (session.state === SessionState.inProgress &&
     now.valueOf() > session.roundStartedAt.valueOf() + ROUND_DIRATION)
 }
 
-export const addPlayer = (session: Session, cmd: AddPlayerToSessionCmd): Session => {
-  if (session.state !== SessionState.pendingPlayersToJoin) {
-    throw new Error("Session has started or is over")
-  }
+export const addPlayer = (session: NewSession, cmd: AddPlayerToSessionCmd): Session => {
   return {
     ...session,
     players: [...session.players, cmd.playerId],
@@ -101,11 +104,7 @@ export const addPlayer = (session: Session, cmd: AddPlayerToSessionCmd): Session
 
 
 
-export const eliminatePlayer = (session: Session, cmd: EliminatePlayerCmd): Session => {
-  if (session.state !== SessionState.inProgress) {
-    throw new Error("Session is not in progress")
-  }
-
+export const eliminatePlayer = (session: InProgressSession, cmd: EliminatePlayerCmd): InProgressSession => {
   const players = [...session.players]
   _.remove(players, p => p === cmd.playerId)
   return {
@@ -113,3 +112,24 @@ export const eliminatePlayer = (session: Session, cmd: EliminatePlayerCmd): Sess
     players
   }
 }
+
+export const activeQuestion = (session: InProgressSession): string => {
+  return session.questions[session.currentRound % session.questions.length]
+}
+
+export const eliminateDisqualifedPlayers = ( session: InProgressSession, activeQuestion: QuestionModel.Question,  responses: Response[]): InProgressSession => {
+  const playersWithInvalidResponses = responses.filter(r => !QuestionModel.validateAnswer(activeQuestion, r.answerId)).map(p => p.playerId)
+
+  const activePlayers = responses.map(p => p.playerId)
+  const idlePlayers = session.players.filter( p => activePlayers.indexOf(p) < 0 )
+
+  const disqualifiedPlayers = idlePlayers.concat(playersWithInvalidResponses)
+
+  const newSession = disqualifiedPlayers.reduce((session, playerId) => eliminatePlayer(session, { playerId }), session)
+
+  return newSession
+}
+
+export const isGameOver = (session: InProgressSession): boolean => session.players.length <= 1
+
+

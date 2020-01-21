@@ -3,7 +3,7 @@ import {createRepo} from '../../app/repositories/inmemory/questions-repo'
 import * as Faker from 'faker'
 
 const createAnswer = (): Answer => ({
-  id: Faker.random.number(),
+  id: Faker.random.uuid(),
   text: Faker.random.uuid(),
   isCorrect: Faker.random.boolean()
 })

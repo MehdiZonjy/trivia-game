@@ -5,14 +5,14 @@ export interface Question {
 }
 
 export interface Answer {
-  id: number
+  id: string
   text: string
   isCorrect: boolean
 }
 
 
 
-const validateAnswer = (question: Question, answerId: number): boolean => {
+export const validateAnswer = (question: Question, answerId: string): boolean => {
   const answer = question.answers.find((ans) => ans.id === answerId)
   return answer != null && answer.isCorrect
 }

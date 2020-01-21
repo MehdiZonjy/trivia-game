@@ -24,8 +24,8 @@ export const createRepo = (): QuestionsRepo => {
     return storage[questionId]
   }
 
-  const getRandomQuestions = async (count: number): Promise<Question[]> => {
-    return _.sampleSize(storage, count)
+  const getRandomQuestions = async (count: number): Promise<string[]> => {
+    return _.sampleSize(storage, count).map(q => q.id)
   }
 
   return {

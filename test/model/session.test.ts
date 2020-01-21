@@ -1,20 +1,7 @@
 import { SessionState, Session } from '../../app/model/session'
 import * as SessionModel from '../../app/model/session'
 import * as Faker from 'faker'
-const createNewSession = (): Session => ({
-  id: 'session1',
-  state: SessionState.pendingPlayersToJoin,
-  questions: [],
-  players: []
-})
-const createInProgressSession = ({ roundStartedAt = new Date(), players = [], questions = [], currentRound = 0 }: { players?: string[], currentRound?: number, questions?: string[], roundStartedAt?: Date }): Session => ({
-  id: 'session2',
-  currentRound,
-  questions: questions,
-  players: players,
-  roundStartedAt,
-  state: SessionState.inProgress
-})
+import {createInProgressSession, createNewSession} from '../test-util'
 
 describe('session model', () => {
   describe('createSession', () => {
@@ -33,7 +20,7 @@ describe('session model', () => {
 
   describe('startSession', () => {
     it('should start a session', () => {
-      const session = createNewSession()
+      const session = createNewSession({})
       const now = new Date()
       expect(SessionModel.startSession(session, {
         date: now
@@ -47,10 +34,6 @@ describe('session model', () => {
       })
     })
 
-    it('should fail if session is not pendingPlayerToJoin state', () => {
-      const session = createInProgressSession({ players: [], questions: [] })
-      expect(() => SessionModel.startSession(session, { date: new Date() })).toThrowError()
-    })
   })
 
   describe('moveToNextRound', () => {
@@ -66,10 +49,6 @@ describe('session model', () => {
           currentRound: currentRound + 1
         })
     })
-    it('should fail if session is not inProgress state', () => {
-      const session = createNewSession()
-      expect(() => SessionModel.moveToNextRound(session, { date: new Date() })).toThrowError()
-    })
   })
 
   describe('shouldMoveToNextRound', () => {
@@ -84,12 +63,8 @@ describe('session model', () => {
     })
   })
   describe('addPlayer', ()=>{
-    it('should fail if session is not in PendingPlayersToJoin state', ()=>{
-      const session = createInProgressSession({})
-      expect(()=>SessionModel.addPlayer(session, {playerId: 'hello'})).toThrowError()
-    })
     it('should add player if in PendingPlayersToJoin state', ()=>{
-      const session = createNewSession()
+      const session = createNewSession({players: []})
       expect(SessionModel.addPlayer(session, {playerId: 'player1'})).toEqual({
         ...session,
         players: ['player1']
@@ -98,10 +73,6 @@ describe('session model', () => {
   })
 
   describe('eliminatePlayer', ()=>{
-    it('should fail if session is not inProgress', ()=>{
-      const session = createNewSession()
-      expect(()=> SessionModel.eliminatePlayer(session, {playerId: 'player'})).toThrowError()
-    })
     it('should eliminate player from inProgress session', ()=>{
       const session = createInProgressSession({players: ['player1', 'player2']})
       expect(SessionModel.eliminatePlayer(session, {playerId: 'player2'})).toEqual({
