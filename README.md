@@ -45,6 +45,7 @@ I tried to avoid websockets or any long living connection in my design as they c
 
 Due to all the above reasons I chose to implement the game using:
 - REST service written in `Node.js`
+- [GameController](app/game-controller.ts) that continuously attempts to update state of (InProgress | New) sessions
 - Cli client written in `Python` that uses polling mechanism to get updates.
 - Dynamodb for storage (locally hosted `Dynamodb` as I don't have access to aws :( )
 
