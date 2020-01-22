@@ -1,4 +1,5 @@
 # Trivia Game Implementation
+a humble implementation of Trivia game in `Node.js` and `Python`
 
 ## Try The Game Online
 The game is already deployed at [https://trivia.mzmuse.com](https://trivia.mzmuse.com). You can run the python clients using docker and get started:
