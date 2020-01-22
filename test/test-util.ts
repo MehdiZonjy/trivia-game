@@ -1,10 +1,11 @@
 import * as Faker from 'faker'
-import { Session, SessionState, NewSession, InProgressSession, Player } from '../app/model/session'
+import { Session, SessionState, NewSession, InProgressSession, Player, FinishedSession } from '../app/model/session'
 import { Response } from '../app/model/response'
 import { SessionsRepo, QuestionsRepo, ResponsesRepo } from '../app/repositories/types'
 import { Question, Answer } from '../app/model/question'
 import { DateTimeService } from '../app/infra/date-time-service'
 import { Logger } from '../app/utils/logger'
+import * as AWS from 'aws-sdk'
 interface CreateNewSessionParams {
   id?: string
   players?: string[]
@@ -47,6 +48,25 @@ export const createInProgressSession = ({
     state: SessionState.inProgress
   })
 
+interface CreateFinishedSessionParams {
+  id?: string
+  winner?: string
+  totalRounds?: number
+  questions?: string[]
+}
+
+export const createFinishedSession = ({
+  id = Faker.random.uuid(),
+  questions = [Faker.random.uuid(), Faker.random.uuid()],
+  totalRounds = Faker.random.number(),
+  winner = Faker.random.uuid()
+}: CreateFinishedSessionParams) : FinishedSession => ({
+  id,
+  winner,
+  totalRounds,
+  questions,
+  state: SessionState.over
+})
 
 interface CreateResponseParams {
   playerId?: string
@@ -174,8 +194,10 @@ export const createDisqualifiedPlayer = (playerId: string): Player => ({
 
 
 export const logger = (): Logger => ({
-  info: () =>({}),
-  warn: () =>({}),
-  debug: () =>({}),
-  error: () =>({}),
+  info: () => ({}),
+  warn: () => ({}),
+  debug: () => ({}),
+  error: () => ({}),
 })
+
+

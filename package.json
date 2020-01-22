@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "jest --config jest.config.js",
+    "test": "jest --config jest.config.js --watch",
     "build": "tsc"
   },
   "author": "",
@@ -12,6 +12,7 @@
   "dependencies": {
     "@types/express": "^4.17.2",
     "ajv": "^6.11.0",
+    "aws-sdk": "^2.608.0",
     "body-parser": "^1.19.0",
     "express": "^4.17.1",
     "express-jwt": "^5.3.1",
@@ -21,13 +22,14 @@
     "uuid": "^3.4.0"
   },
   "devDependencies": {
-    "@types/jest": "^24.9.0",
+    "@types/aws-sdk": "^2.7.0",
     "@types/express-jwt": "0.0.42",
-    "@types/node": "^13.1.8",
-    "@types/uuid": "^3.4.6",
     "@types/faker": "^4.1.9",
+    "@types/jest": "^24.9.0",
     "@types/jsonwebtoken": "^8.3.6",
     "@types/lodash": "^4.14.149",
+    "@types/node": "^13.1.8",
+    "@types/uuid": "^3.4.6",
     "faker": "^4.1.0",
     "jest": "^24.9.0",
     "ts-jest": "^24.3.0"

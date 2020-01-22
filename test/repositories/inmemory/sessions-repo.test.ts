@@ -1,6 +1,6 @@
-import {Session,SessionState} from '../../app/model/session'
-import {createSessionsRepo} from '../../app/repositories/inmemory/sessions-repo'
-import {createNewSession} from '../test-util'
+import {Session,SessionState} from '../../../app/model/session'
+import {createSessionsRepo} from '../../../app/repositories/inmemory/sessions-repo'
+import {createNewSession} from '../../test-util'
 
 
 describe('sessions-repo', ()=>{

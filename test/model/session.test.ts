@@ -72,8 +72,8 @@ describe('session model', () => {
     })
   })
 
-  describe.only('eliminatePlayer', () => {
-    it.only('should eliminate player from inProgress session', () => {
+  describe('eliminatePlayer', () => {
+    it('should eliminate player from inProgress session', () => {
       const session = createInProgressSession({ qualifiedPlayers: ['player1', 'player2'] })
       expect(SessionModel.eliminatePlayer(session, { playerId: 'player2' })).toEqual({
         ...session,

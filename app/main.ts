@@ -3,9 +3,16 @@ import { createAuthService, PlayerIdentity } from './services/auth-service'
 import { createResponsesSession } from './services/responses-service'
 import { createDateTimeService } from './infra/date-time-service'
 import { idGenerator } from './infra/id-generator'
-import * as QuestionsRepo from './repositories/inmemory/questions-repo'
-import * as ResponsesReop from './repositories/inmemory/responses-repo'
-import * as SessionsRepo from './repositories/inmemory/sessions-repo'
+import * as InMemoryQuestionsRepo from './repositories/inmemory/questions-repo'
+import * as InMemoryResponsesReop from './repositories/inmemory/responses-repo'
+import * as InMemorySessionsRepo from './repositories/inmemory/sessions-repo'
+
+import * as DynamodbQuestionsRepo from './repositories/dynamodb/questions-repo'
+import * as DynamodbResponsesReop from './repositories/dynamodb/responses-repo'
+import * as DynamodbSessionsRepo from './repositories/dynamodb/sessions-repo'
+
+import {QuestionsRepo, ResponsesRepo, SessionsRepo} from './repositories/types'
+
 import createApp from 'express'
 import JWTExpress from 'express-jwt'
 import * as SubmitAnswerRequestValidator from './validators/submit-answer-request'
@@ -16,20 +23,31 @@ import { Request as ExpRequest, Response as ExpResponse } from 'express'
 import * as Logger from './utils/logger'
 import { createGameController } from './game-controller'
 import {getConfig} from './config'
+import * as AWS from 'aws-sdk'
+
+
+const createRepos = (dynamodbEndpoint?: string): [QuestionsRepo, ResponsesRepo, SessionsRepo] => {
+  if(dynamodbEndpoint) {
+    const client = new AWS.DynamoDB.DocumentClient({
+      endpoint: dynamodbEndpoint
+    })
+    return [DynamodbQuestionsRepo.createRepo(client), DynamodbResponsesReop.createRepo(client), DynamodbSessionsRepo.createRepo(client)]
+  } else {
+    return [InMemoryQuestionsRepo.createRepo(), InMemoryResponsesReop.createRepo(), InMemorySessionsRepo.createSessionsRepo()]
+  }
+}
 
 const main = async () => {
   const conf = getConfig()
 
-  const questionsRepo = QuestionsRepo.createRepo()
-  const responsesRepo = ResponsesReop.createRepo()
-  const sessionsRepo = SessionsRepo.createSessionsRepo()
+  const [questionsRepo, responsesRepo, sessionsRepo] = createRepos(conf.dynamodbEndpoint)
   const authService = createAuthService({ jwtSecret: conf.jwtSecret })
   const dateTimeService = createDateTimeService()
   const responsesService = createResponsesSession({ responsesRepo, sessionsRepo, questionsRepo })
   const logger = Logger.createConsoleLogger()
   const submitResponseValidator = SubmitAnswerRequestValidator.createValidator(logger)
   //load test data
-  await Promise.all(QuestionsSample.Data.map(q => questionsRepo.saveQuestion(q)))
+  await Promise.all(QuestionsSample.Data.map(questionsRepo.saveQuestion))
 
   const sessionsService = createSessionsService({
     questionsRepo,

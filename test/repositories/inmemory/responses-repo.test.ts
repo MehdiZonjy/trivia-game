@@ -1,6 +1,6 @@
-import {Response} from '../../app/model/response'
-import {createRepo} from '../../app/repositories/inmemory/responses-repo'
-import {createResponse} from '../test-util'
+import {Response} from '../../../app/model/response'
+import {createRepo} from '../../../app/repositories/inmemory/responses-repo'
+import {createResponse} from '../../test-util'
 
 
 describe('responses-repo', ()=>{

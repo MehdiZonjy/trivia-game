@@ -1,5 +1,5 @@
-import { Answer, Question} from '../../app/model/question'
-import {createRepo} from '../../app/repositories/inmemory/questions-repo'
+import { Answer, Question} from '../../../app/model/question'
+import {createRepo} from '../../../app/repositories/inmemory/questions-repo'
 import * as Faker from 'faker'
 
 const createAnswer = (): Answer => ({
