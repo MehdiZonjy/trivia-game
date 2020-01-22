@@ -26,7 +26,7 @@ Make sure you have docker and docker-compose setup
 ## Domain Model
 I'm using ADT (algebraic data types) to model my domain. There are 3 types:
 
-- [Session](app/model/session.ts): represents a game session. Each session can be either “New”, “InProgress” or “Finished”
+- [Session](app/model/session.ts): represents a game session. Each session can be either "New”, "InProgress” or "Finished”
 - [Question](app/model/question.ts): Questions and their accompanying response.
 - [Response](app/model/response.ts): Responses gathered from players during for a particular round and session.
 
@@ -65,9 +65,9 @@ Creates a new session
 Response:
 ```json
 {
-  “playerId”:”string”,
-  “sessionId”: “string”,
-  “playerToken”: “string” # used to authenticate responses submissions
+  "playerId”:"string",
+  "sessionId”: "string",
+  "playerToken”: "string"
 }
 ```
 ### POST /sessions/<sessionId>/join
@@ -76,16 +76,16 @@ Allows a player to join an existing session
 Response:
 ```json
 {
-  “playerId”: “string”,
-  “sessionId”: “string”
-   “playerToken”: “string”
+  "playerId”: "string”,
+  "sessionId”: "string”
+   "playerToken”: "string”
 }
 
 ### POST /sessions/submitAnswer
 Submit answer. Requires authentication using `playerToken`
 ```json
 Header: {
-  “Authorization”: “Bearer <playerToken>”
+  "Authorization”: "Bearer <playerToken>”
 }
 ```
 
@@ -98,36 +98,36 @@ Response:
 ```json
 // in case of new session
 {
-  “sessionId”: “string”,
-  “playersCount”: “number”,
-  “state”: “newSession”
+  "sessionId”: "string”,
+  "playersCount”: "number”,
+  "state”: "newSession”
 }
 
 // in case of inProgress session
 {
-  “sessionId”: “string”,
-  “question”: {
-     “id”:”string”,
-     “text”: “string”,
-     “Answers”: [
+  "sessionId”: "string”,
+  "question”: {
+     "id”:”string”,
+     "text”: "string”,
+     "Answers”: [
        {  
-         “id”: “string”,
-         “text”: “string
+         "id”: "string”,
+         "text”: "string
        }
      ] 
 
   },
-  “round”: number,
-  “remainingPlayers”: number,,
-  “state”: “inProgress”
+  "round”: number,
+  "remainingPlayers”: number,,
+  "state”: "inProgress”
 }
 
 // incase session is over
 {
-  “sessionId”:”string”,
-  “winner”: “string”,
-  “totalRounds”: “number”,
-  “state”: “over” 
+  "sessionId”:”string”,
+  "winner”: "string”,
+  "totalRounds”: "number”,
+  "state”: "over” 
 }
 ```
 
@@ -135,11 +135,11 @@ Response:
 Retrieves players response for the request round
 ```json
 {
-  “text”: “string”,
-   “responses”: [
+  "text”: "string”,
+   "responses”: [
       {
-        “text”: “string”,
-        “playersCount”: “number”
+        "text”: "string”,
+        "playersCount”: "number”
       }
     ]
 }
@@ -148,7 +148,7 @@ Retrieves players response for the request round
 Validates token and the player’s state in session
 Response
 ```json
-“Qualified” | “Disqualified” | “NotPartOfSession”
+"Qualified” | "Disqualified” | "NotPartOfSession”
 ```
 
 
