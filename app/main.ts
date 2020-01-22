@@ -14,7 +14,7 @@ import * as QuestionsSample from './questions'
 import { ResourceNotFound, InvalidState } from './services/errors'
 import { Request as ExpRequest, Response as ExpResponse } from 'express'
 import * as Logger from './utils/logger'
-import { moveToNextRound } from './model/session'
+import {createGameController} from './game-controller'
 const JWT_SECRET = 'chaneg me'
 
 const main = async () => {
@@ -26,6 +26,7 @@ const main = async () => {
   const dateTimeService = createDateTimeService()
   const responsesService = createResponsesSession({ responsesRepo, sessionsRepo })
   const logger = Logger.createConsoleLogger()
+
   const submitResponseValidator = SubmitAnswerRequestValidator.createValidator(logger)
   //load test data
   await Promise.all(QuestionsSample.Data.map(q => questionsRepo.saveQuestion(q)))
@@ -38,6 +39,9 @@ const main = async () => {
     dateTimeService,
     logger
   })
+
+  const gameController = createGameController({logger,sessionsService,sessionsRepo})
+  gameController.start()
 
   const app = createApp()
 

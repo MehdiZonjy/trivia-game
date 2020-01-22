@@ -4,6 +4,7 @@ import { Response } from '../model/response'
 export interface SessionsRepo {
   saveSession: (Session: Session) => Promise<boolean>
   getSession: (id: string) => Promise<Session | undefined>
+  getActiveSessions: () => Promise<Session[]>
 }
 
 

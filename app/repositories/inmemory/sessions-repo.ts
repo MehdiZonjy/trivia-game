@@ -1,5 +1,6 @@
-import { Session } from '../../model/session'
+import { Session, SessionState } from '../../model/session'
 import { SessionsRepo } from '../types'
+import * as _ from 'lodash'
 
 interface SessionStorage {
   [id: string]: Session
@@ -18,6 +19,16 @@ export const createSessionsRepo = (): SessionsRepo => {
     return storage[id];
   }
 
-  return {saveSession, getSession}
+  const getActiveSessions = async (): Promise<Session[]> => {
+    const sessions = _.reduce(storage, (acc, session, key) =>{
+      if(session.state === SessionState.inProgress || session.state === SessionState.newSession) {
+        return [...acc, session]
+      }
+      return acc
+    }, [] as Session[])
+    return sessions
+  }
+
+  return {saveSession, getSession, getActiveSessions}
 
 }

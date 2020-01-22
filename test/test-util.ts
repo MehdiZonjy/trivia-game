@@ -74,14 +74,17 @@ export const createResponse = ({
 interface CreateSessionsRepoParams {
   saveSession?: (Session: Session) => Promise<boolean>
   getSession?: (id: string) => Promise<Session | undefined>
+  getActiveSessions?: () => Promise<Session[]>
 }
 
 export const createSessionsRepo = ({
   getSession = jest.fn(),
-  saveSession = jest.fn()
+  saveSession = jest.fn(),
+  getActiveSessions = jest.fn()
 }: CreateSessionsRepoParams): SessionsRepo => ({
   getSession,
-  saveSession
+  saveSession,
+  getActiveSessions
 })
 
 

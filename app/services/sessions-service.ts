@@ -7,7 +7,7 @@ import { Question } from "../model/question";
 import { Logger } from "../utils/logger";
 import { ResourceNotFound, InvalidState } from "./errors";
 
-interface SessionsService {
+export interface SessionsService {
   createSession: () => Promise<SessionCreated>
   addPlayer: (sessionId: string) => Promise<PlayerAddedToSession>
   moveToNextRound: (sessionId: string) => Promise<Session>
