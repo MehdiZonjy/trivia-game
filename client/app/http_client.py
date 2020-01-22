@@ -1,5 +1,5 @@
 import requests
-from session_info import SessionInfo, PlayerState
+from session_info import SessionInfo, PlayerState, ResponseStats, RoundStats
 from session_states import InProgressSession, FinishedSession, NewSession, Answer, Question
 
 
@@ -13,6 +13,8 @@ def submitResponseUrl(endpoint):
   return f"{endpoint}/sessions/submitAnswer"
 def playerStateUrl(endpoint):
   return f'{endpoint}/me'
+def roundStatsUrl(endpoint, sessionId, round):
+  return f'{endpoint}/sessions/{sessionId}/rounds/{round}' 
 
 
 class HttpClient:
@@ -93,3 +95,14 @@ class HttpClient:
       return PlayerState.NotPartOfSession
     else:
        PlayerState.GameOver
+  def roundStats(self, sessionId, round):
+    responseObj = requests.get(roundStatsUrl(self.endpoint, sessionId, round))
+    if responseObj.status_code != 200:
+      return None
+    
+    response = responseObj.json()
+    playersResponses = []
+    for x in response['responses']:
+      playersResponses.append(ResponseStats(x['text'], x['playersCount']))
+
+    return RoundStats(response['text'], playersResponses)

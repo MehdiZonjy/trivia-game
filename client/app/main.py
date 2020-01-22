@@ -49,7 +49,18 @@ def joinSession(httpClient, sessionId):
   return session
 
 
-def showPlayerStats(httpClient, sessionInfo):
+def showRoundStats(httpClient, round, sessionInfo):
+  roundStats = httpClient.roundStats(sessionInfo.sessionId, round)
+  answersTxt = ''
+  for i in range(0, len(roundStats.responses)):
+    ans = roundStats.responses[i]
+    answersTxt+=f'{i+1}: {ans.text}. (Total Responses: {ans.playersCount})\n'
+  print(f"""
+--------
+Question: {roundStats.text}
+{answersTxt}
+--------""")
+  return True
   
 def showEndScreen(httpClient,sessionInfo):
   # pass
@@ -104,11 +115,12 @@ def startSession(sessionInfo, httpClient):
       return
     
     if isinstance(sessionState, InProgressSession): # game is in progress
-      if prevRound != sessionState.round: # only display a new question when sessoin advanced to next round
+      if prevRound != sessionState.round: # only display a new question when session has advanced to next round
+        prevRound != -1 and showRoundStats(httpClient, prevRound, sessionInfo)
         prevRound = sessionState.round
         shouldProcceed = handleInProgressSession(sessionInfo, sessionState, httpClient)
         if not shouldProcceed:
-          showEndScreen(httpClient, sessionInfo)
+          showRoundStats(httpClient, prevRound, sessionInfo) and showEndScreen(httpClient, sessionInfo)
           return
       time.sleep(1)
     elif isinstance(sessionState, NewSession): 
@@ -116,6 +128,7 @@ def startSession(sessionInfo, httpClient):
       return
     elif isinstance(sessionState, FinishedSession):
       print("Game over")
+      showRoundStats(httpClient, prevRound, sessionInfo)
       return showEndScreen(httpClient, sessionInfo)
       return
 
@@ -133,8 +146,7 @@ def main():
   while(True):
     print("""
   1: Start New Session
-  2: Join Session
-    """) 
+  2: Join Session""") 
     cmd = input()
     if cmd == "1":
       sessionInfo = startNewSession(httpClient)

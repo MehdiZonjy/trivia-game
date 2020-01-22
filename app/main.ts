@@ -24,7 +24,7 @@ const main = async () => {
   const sessionsRepo = SessionsRepo.createSessionsRepo()
   const authService = createAuthService({ jwtSecret: JWT_SECRET })
   const dateTimeService = createDateTimeService()
-  const responsesService = createResponsesSession({ responsesRepo, sessionsRepo })
+  const responsesService = createResponsesSession({ responsesRepo, sessionsRepo, questionsRepo })
   const logger = Logger.createConsoleLogger()
 
   const submitResponseValidator = SubmitAnswerRequestValidator.createValidator(logger)
@@ -138,6 +138,16 @@ const main = async () => {
       next(err)
     }
 
+  })
+
+  app.get('/sessions/:sessionId/rounds/:round(\\d+)', async (req, res, next) => {
+    try {
+      const { sessionId, round } = req.params
+      const roundStats = await responsesService.roundStats(sessionId, Number.parseInt(round))
+      res.send(roundStats)
+    } catch (err) {
+      next(err)
+    }
   })
 
 

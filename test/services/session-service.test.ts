@@ -274,6 +274,8 @@ describe('sessions-service', ()=>{
       expect(sessionsRepo.saveSession).toHaveBeenCalledWith({
         id: inProgressSession.id,
         winner: playerWhoAnsweredCorrectly,
+        questions: inProgressSession.questions,
+        totalRounds: inProgressSession.currentRound + 1,
         state: SessionState.over
       })
     })

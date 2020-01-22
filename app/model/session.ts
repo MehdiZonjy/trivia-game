@@ -28,6 +28,7 @@ export interface FinishedSession {
   winner?: string
   state: SessionState.over
   totalRounds: number
+  questions: string[]
 }
 export interface NewSession {
   id: string
@@ -85,6 +86,7 @@ export const endSession = (session: InProgressSession): FinishedSession => {
     id: session.id,
     winner: winner && winner.playerId,
     state: SessionState.over,
+    questions: session.questions,
     totalRounds: session.currentRound + 1
   }
 }
@@ -127,8 +129,11 @@ export const eliminatePlayer = (session: InProgressSession, cmd: EliminatePlayer
   }
 }
 
+export const roundQuestion = (session: Session, round: number) => {
+  return session.questions[round % session.questions.length]
+}
 export const activeQuestion = (session: InProgressSession): string => {
-  return session.questions[session.currentRound % session.questions.length]
+  return roundQuestion(session, session.currentRound)
 }
 
 export const eliminateDisqualifedPlayers = (session: InProgressSession, activeQuestion: QuestionModel.Question, responses: Response[]): InProgressSession => {
