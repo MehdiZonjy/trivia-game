@@ -20,7 +20,7 @@ Make sure you have docker and docker-compose setup
 ## Domain Model
 I'm using ADT (algebraic data types) to model my domain. There are 3 types:
 
-- [Session](): represents a game session. Each session can be either “New”, “InProgress” or “Finished”
+- [Session](app/model/question.ts): represents a game session. Each session can be either “New”, “InProgress” or “Finished”
 - [Question]: Questions and their accompanying response.
 - [Response]: Responses gathered from players during for a particular round and session.
 
@@ -45,7 +45,7 @@ Due to all the above reasons I chose to implement the game using REST and implem
 - Nginx running on host as reverse proxy
 - cloudflare to manage my dns
 - my VPS is running in DigitalOcean where i manage everything with `Ansible` and `Terraform`
-
+- Cli client built in Python
 
 
 The app service exposes a couple of endpoints:
