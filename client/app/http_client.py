@@ -1,7 +1,6 @@
 import requests
-from session_info import SessionInfo
+from session_info import SessionInfo, PlayerState
 from session_states import InProgressSession, FinishedSession, NewSession, Answer, Question
-
 
 
 def startSessionUrl(endpoint):
@@ -12,6 +11,9 @@ def joinSessionUrl(endpoint, sessionId):
   return f"{endpoint}/sessions/{sessionId}/join"
 def submitResponseUrl(endpoint):
   return f"{endpoint}/sessions/submitAnswer"
+def playerStateUrl(endpoint):
+  return f'{endpoint}/me'
+
 
 class HttpClient:
   def __init__(self, endpoint):
@@ -46,7 +48,7 @@ class HttpClient:
       question = Question(response['question']['id'], response['question']['text'], answers)
       return InProgressSession(response['sessionId'], question, response['round'], response['remainingPlayers'])
     elif state == 'over':
-      return FinishedSession(response['sessionId'], response['winner'])
+      return FinishedSession(response['sessionId'], response.get('winner', None), response['totalRounds'])
     else:
       print("unknown session state", state)
       None
@@ -72,7 +74,22 @@ class HttpClient:
     } )
 
     if responseObj.status_code != 200:
-      print(responseObj.status_code)
-      print(responseObj.text)
       return False
     return True
+  
+  def playerState(self, playerToken):
+    responseObj = requests.get(playerStateUrl(self.endpoint),
+    headers = {
+      "Authorization": f"Bearer {playerToken}"
+    })
+    if responseObj.status_code != 200:
+      return PlayerState.GameOver
+    
+    if responseObj.text == 'Qualified':
+      return PlayerState.Qualified
+    elif responseObj.text == 'Disqualified':
+      return PlayerState.Disqualified
+    elif responseObj.text == 'NotPartOfSession':
+      return PlayerState.NotPartOfSession
+    else:
+       PlayerState.GameOver

@@ -14,7 +14,7 @@ import * as QuestionsSample from './questions'
 import { ResourceNotFound, InvalidState } from './services/errors'
 import { Request as ExpRequest, Response as ExpResponse } from 'express'
 import * as Logger from './utils/logger'
-import {createGameController} from './game-controller'
+import { createGameController } from './game-controller'
 const JWT_SECRET = 'chaneg me'
 
 const main = async () => {
@@ -40,7 +40,9 @@ const main = async () => {
     logger
   })
 
-  const gameController = createGameController({logger,sessionsService,sessionsRepo})
+  const jwtMiddleware = JWTExpress({ secret: JWT_SECRET })
+
+  const gameController = createGameController({ logger, sessionsService, sessionsRepo })
   gameController.start()
 
   const app = createApp()
@@ -49,7 +51,6 @@ const main = async () => {
 
   app.post('/sessions', async (req, res, next) => {
     try {
-
       const { playerId, sessionId } = await sessionsService.createSession()
       const playerToken = authService.createSessionToken(sessionId, playerId)
       res.send({
@@ -61,7 +62,6 @@ const main = async () => {
     } catch (err) {
       next(err)
     }
-
   })
 
 
@@ -85,7 +85,7 @@ const main = async () => {
 
   })
 
-  app.post('/sessions/submitAnswer', JWTExpress({ secret: JWT_SECRET }), async (req, res, next) => {
+  app.post('/sessions/submitAnswer', jwtMiddleware, async (req, res, next) => {
     try {
 
       const tokenPayload: PlayerIdentity | undefined = (req as any).user
@@ -111,6 +111,22 @@ const main = async () => {
     }
   })
 
+  app.get('/me', jwtMiddleware, async (req, res, next) => {
+    try {
+      const tokenPayload: PlayerIdentity | undefined = (req as any).user
+      if (!tokenPayload) {
+        res.status(401)
+        return res.send('invalid token')
+      }
+      const { playerId, sessionId } = tokenPayload
+      const playerState = await sessionsService.playerState(sessionId, playerId)
+      res.send(playerState)
+      next()
+    } catch (err) {
+      next(err)
+    }
+  })
+
   app.get('/sessions/:sessionId', async (req, res, next) => {
     try {
 
@@ -123,6 +139,7 @@ const main = async () => {
     }
 
   })
+
 
   app.use((err: any, req: ExpRequest, res: ExpResponse, next: any) => {
     if (!err) {
@@ -145,8 +162,8 @@ const main = async () => {
     logger.error(err)
     res.status(500)
     res.send("Internal Error")
-
   })
+
 
   app.listen(8080, () => console.log('listening'))
 

@@ -27,6 +27,7 @@ export interface FinishedSession {
   id: string
   winner?: string
   state: SessionState.over
+  totalRounds: number
 }
 export interface NewSession {
   id: string
@@ -37,7 +38,7 @@ export interface NewSession {
 
 
 export const ROUND_DIRATION = 10 * 1000 // 10 seconds
-export const START_SESSION_THRESHOLD = 2
+export const START_SESSION_THRESHOLD = 3
 
 export interface CreateSessionCmd {
   questions: string[]
@@ -83,7 +84,8 @@ export const endSession = (session: InProgressSession): FinishedSession => {
   return {
     id: session.id,
     winner: winner && winner.playerId,
-    state: SessionState.over
+    state: SessionState.over,
+    totalRounds: session.currentRound + 1
   }
 }
 
@@ -149,9 +151,9 @@ export const canStartSession = (session: NewSession): boolean => session.players
 
 
 export enum PlayerState {
-  Qualified,
-  Disqualified,
-  NotPartOfSession
+  Qualified = "Qualified",
+  Disqualified = "Disqualified",
+  NotPartOfSession = "NotPartOfSession"
 }
 export const getPlayerState = (session: InProgressSession, playerId: string) => {
   const player= session.players.find( p => p.playerId === playerId)

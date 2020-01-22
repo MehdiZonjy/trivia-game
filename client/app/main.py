@@ -3,6 +3,7 @@ import sys
 import time
 from http_client import HttpClient
 from session_states import InProgressSession, FinishedSession, NewSession
+from session_info import PlayerState
 from utils import readNumber
 
 class SessionInfo:
@@ -47,20 +48,51 @@ def joinSession(httpClient, sessionId):
     print(f"joined sessoin: sessionId({session.sessionId}), playerId({session.playerId})")
   return session
 
+
+def showPlayerStats(httpClient, sessionInfo):
+  
 def showEndScreen(httpClient,sessionInfo):
-  pass
+  # pass
+  sessionState = httpClient.getSessionState(sessionInfo.sessionId)
+  if not (sessionState and isinstance(sessionState, FinishedSession)):
+    return
+  winner = "You" if sessionState.winner == sessionInfo.playerId else sessionState.winner 
+  print(f"""
+--------------------------
+Total Rounds: {sessionState.totalRounds}
+Winner: {winner if winner else "None"}
+--------------------------
+  """)
+  
 
 def promptQuestionAndSendAnswer(sessionInfo, sessionState, httpClient):
   question =sessionState.question
-  print(f"Question: {question.text}")
   answersTxt =''
   for i in range(0, len(question.answers)):
     answersTxt += f"{i + 1}: {question.answers[i].text}\n"
-  print(answersTxt)
+  print(f"""
+###########
+Question: {question.text}
+{answersTxt}
+###########  
+  """)
   answerIndex = readNumber("Select Answer:", 1, len(question.answers)) - 1
   answerId = question.answers[answerIndex].id
   return httpClient.submitResponse(sessionInfo.playerToken, sessionState.round, question.id, answerId)
 
+
+def validateUserState(sessionInfo, httpClient):
+  playerState = httpClient.playerState(sessionInfo.playerToken)
+  return playerState == PlayerState.Qualified
+
+
+def handleInProgressSession(sessionInfo, sessionState, httpClient):
+    if not validateUserState(sessionInfo, httpClient):
+      return False
+    answerSubmitted = promptQuestionAndSendAnswer(sessionInfo, sessionState, httpClient) 
+    if answerSubmitted:
+      print("Answer Saved. Waiting for next round")
+    return answerSubmitted
 
 def startSession(sessionInfo, httpClient):
   gameOver = False
@@ -71,16 +103,15 @@ def startSession(sessionInfo, httpClient):
       print("Faild to get session state")
       return
     
-    if isinstance(sessionState, InProgressSession):
-      if prevRound != sessionState.round:
+    if isinstance(sessionState, InProgressSession): # game is in progress
+      if prevRound != sessionState.round: # only display a new question when sessoin advanced to next round
         prevRound = sessionState.round
-        answerSubmitted = promptQuestionAndSendAnswer(sessionInfo, sessionState, httpClient) 
-        if not answerSubmitted:
-          return showEndScreen(httpClient, sessionInfo)
-        else: 
-          print("Answer Saved. Waiting for next round")
+        shouldProcceed = handleInProgressSession(sessionInfo, sessionState, httpClient)
+        if not shouldProcceed:
+          showEndScreen(httpClient, sessionInfo)
+          return
       time.sleep(1)
-    elif isinstance(sessionState, NewSession):
+    elif isinstance(sessionState, NewSession): 
       print('how did i get here')
       return
     elif isinstance(sessionState, FinishedSession):
@@ -94,6 +125,8 @@ def getEndpoint():
   if len(sys.argv) >= 2:
     return sys.argv[1]
   return 'http://localhost:8080'
+
+
 def main():
   endpoint = getEndpoint()
   httpClient = HttpClient(endpoint)

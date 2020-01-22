@@ -12,6 +12,7 @@ export interface SessionsService {
   addPlayer: (sessionId: string) => Promise<PlayerAddedToSession>
   moveToNextRound: (sessionId: string) => Promise<Session>
   getSessionState: (sessionId: string) => Promise<SessionStateDTO>
+  playerState: (sessionId: string, playerId :string) => Promise<SessionModel.PlayerState>
 }
 
 interface SessionCreated {
@@ -52,6 +53,7 @@ interface NewSessionDTO {
 interface FinishedSessionDTO {
   sessionId: string
   winner?: string
+  totalRounds: number
   state: SessionState.over
 }
 
@@ -180,6 +182,7 @@ export const createSessionsService = (params: CreateSessionsServiceParams): Sess
       case SessionState.over: {
         return {
           state: SessionState.over,
+          totalRounds: session.totalRounds,
           winner: session.winner,
           sessionId: session.id
         }
@@ -187,5 +190,22 @@ export const createSessionsService = (params: CreateSessionsServiceParams): Sess
     }
 
   }
-  return { addPlayer, createSession, moveToNextRound, getSessionState }
+
+  const playerState = async (sessionId: string, playerId :string): Promise<SessionModel.PlayerState> => {
+    const session = await sessionsRepo.getSession(sessionId)
+
+    if(!session){
+      return SessionModel.PlayerState.NotPartOfSession
+    }
+
+    if(!SessionModel.isSessionInProgress(session)) {
+      return SessionModel.PlayerState.Disqualified
+      // throw new InvalidState("Session is no longer in progress", {sessionId, playerId})
+    }
+
+    const playerState = SessionModel.getPlayerState(session, playerId)
+    return playerState
+  }
+
+  return { addPlayer, createSession, moveToNextRound, getSessionState, playerState }
 }

@@ -12,9 +12,10 @@ class NewSession:
     self.playersCount = playersCount
 
 class FinishedSession:
-  def __init__(self, sessionId, winner ):
+  def __init__(self, sessionId, winner, totalRounds ):
     self.sessionId = sessionId
     self.winner = winner
+    self.totalRounds = totalRounds
     
 class Question:
   def __init__(self, id, text,answers):
