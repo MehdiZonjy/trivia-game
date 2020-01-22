@@ -1,6 +1,11 @@
 # Trivia Game Implementation
 a humble implementation of Trivia game in `Node.js` and `Python`
 
+
+## Roles
+- Two players to start a session.
+- 10 seconds per round
+- In the sample questions i'm using `Answer 1` is always correct 
 ## Try The Game Online
 The game is already deployed at [https://trivia.mzmuse.com](https://trivia.mzmuse.com). You can run the python clients using docker and get started:
 ```
