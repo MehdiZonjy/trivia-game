@@ -14,7 +14,7 @@ export interface InProgressSession {
   currentRound: number
   questions: string[]
   players: Player[]
-  roundStartedAt: Date
+  roundStartedAt: number
   state: SessionState.inProgress
 }
 
@@ -39,7 +39,7 @@ export interface NewSession {
 
 
 export const ROUND_DIRATION = 10 * 1000 // 10 seconds
-export const START_SESSION_THRESHOLD = 3
+export const START_SESSION_THRESHOLD = 2
 
 export interface CreateSessionCmd {
   questions: string[]
@@ -76,7 +76,7 @@ export const startSession = (session: NewSession, cmd: StartSessionCmd): InProgr
     ...session,
     currentRound: 0,
     state: SessionState.inProgress,
-    roundStartedAt: cmd.date
+    roundStartedAt: cmd.date.valueOf()
   }
 }
 
@@ -96,7 +96,7 @@ export const moveToNextRound = (session: InProgressSession, cmd: MoveToNextRound
   return {
     ...session,
     state: SessionState.inProgress,
-    roundStartedAt: cmd.date,
+    roundStartedAt: cmd.date.valueOf(),
     currentRound: session.currentRound + 1,
   }
 }

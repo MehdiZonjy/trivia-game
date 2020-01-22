@@ -3,16 +3,12 @@ import { Session, SessionState } from '../../model/session'
 import { DocumentClient } from 'aws-sdk/clients/dynamodb'
 import * as _ from 'lodash'
 
-const TABLE = 'sessions'
 
-/*
-  saveSession: (Session: Session) => Promise<boolean>
-  getSession: (id: string) => Promise<Session | undefined>
-  getActiveSessions: () => Promise<Session[]>
-*/
+const TABLE = 'sessions'
 
 export const createRepo = (client: DocumentClient): SessionsRepo => {
   const saveSession = async (session: Session): Promise<boolean> => {
+    
     await client.put({
       TableName: TABLE,
       Item: session

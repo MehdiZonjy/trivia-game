@@ -29,7 +29,7 @@ describe('session model', () => {
         currentRound: 0,
         questions: session.questions,
         players: session.players,
-        roundStartedAt: now,
+        roundStartedAt: now.valueOf(),
         state: SessionState.inProgress
       })
     })
@@ -45,7 +45,7 @@ describe('session model', () => {
       expect(SessionModel.moveToNextRound(session, { date: now }))
         .toEqual({
           ...session,
-          roundStartedAt: now,
+          roundStartedAt: now.valueOf(),
           currentRound: currentRound + 1
         })
     })

@@ -44,7 +44,7 @@ export const createInProgressSession = ({
     currentRound,
     questions: questions,
     players: [...qualifiedPlayers.map(createQualifiedPlayer), ...disqualifiedPlayers.map(createDisqualifiedPlayer)],
-    roundStartedAt,
+    roundStartedAt: roundStartedAt.valueOf(),
     state: SessionState.inProgress
   })
 

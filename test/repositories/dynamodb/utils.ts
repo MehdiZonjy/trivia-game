@@ -2,18 +2,14 @@ import * as AWS from 'aws-sdk'
 
 export const dynamodbDocumentClient = (): AWS.DynamoDB.DocumentClient =>
   new AWS.DynamoDB.DocumentClient({
-    accessKeyId: 'test',
-    secretAccessKey: 'test',
-    endpoint: process.env['DYNAMODB_ENDPOINT'],
+    endpoint: process.env['AWS_DYNAMO_URL'],
     region: 'us-west-2'
   })
 
 
 export const dynamodbClient = (): AWS.DynamoDB =>
   new AWS.DynamoDB({
-    accessKeyId: 'test',
-    secretAccessKey: 'test',
-    endpoint: process.env['DYNAMODB_ENDPOINT'],
+    endpoint: process.env['AWS_DYNAMO_URL'],
     region: 'us-west-2'
   })
 

@@ -6,8 +6,6 @@ module.exports = {
   ],
   moduleDirectories: [
     "node_modules"
-    // "<rootDir>/lib"
   ],
   testEnvironment: 'node',
-  // "setupFiles": ["<rootDir>/test/setup.js"]
 };

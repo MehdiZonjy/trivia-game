@@ -1,0 +1,23 @@
+version: '3'
+services:
+  dynamo:
+    image: amazon/dynamodb-local:1.11.477
+    ports:
+      - 8000:8000
+  app:
+    build:
+      context: .
+      dockerfile: app.Dockerfile
+    depends_on:
+      - dynamo
+    ports: 
+      - 4000:8080
+    environment:
+      AWS_DYNAMO_URL: http://dynamo:8000
+      AWS_DEFAULT_REGION: us-west-2
+      AWS_ACCESS_KEY_ID: "test"
+      AWS_SECRET_ACCESS_KEY: "test"
+    entrypoint:
+      - bash
+      - -c
+      - "cd /app; ./bootstrap.sh; node build/app/main.js"

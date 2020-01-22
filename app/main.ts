@@ -28,17 +28,21 @@ import * as AWS from 'aws-sdk'
 
 const createRepos = (dynamodbEndpoint?: string): [QuestionsRepo, ResponsesRepo, SessionsRepo] => {
   if(dynamodbEndpoint) {
+    console.log('using dynamodb storage')
     const client = new AWS.DynamoDB.DocumentClient({
-      endpoint: dynamodbEndpoint
+      endpoint: dynamodbEndpoint,
+      region: 'us-west-2'
     })
     return [DynamodbQuestionsRepo.createRepo(client), DynamodbResponsesReop.createRepo(client), DynamodbSessionsRepo.createRepo(client)]
   } else {
+    console.log('using in memory storage')
     return [InMemoryQuestionsRepo.createRepo(), InMemoryResponsesReop.createRepo(), InMemorySessionsRepo.createSessionsRepo()]
   }
 }
 
 const main = async () => {
   const conf = getConfig()
+  
 
   const [questionsRepo, responsesRepo, sessionsRepo] = createRepos(conf.dynamodbEndpoint)
   const authService = createAuthService({ jwtSecret: conf.jwtSecret })
@@ -193,7 +197,13 @@ const main = async () => {
   })
 
 
-  app.listen(8080, () => console.log('listening'))
+  app.listen(8080, (err) => {
+    if(err){
+      console.error(err)
+    } else {
+      console.log('listening')
+    }
+  })
 
 
 }

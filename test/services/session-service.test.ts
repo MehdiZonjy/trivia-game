@@ -122,7 +122,7 @@ describe('sessions-service', ()=>{
         currentRound: 0,
         questions: newSession.questions,
         players: [...newSession.players, {playerId, disqualified: false}],
-        roundStartedAt,
+        roundStartedAt: roundStartedAt.valueOf(),
         state: SessionState.inProgress
       })
 
@@ -209,7 +209,7 @@ describe('sessions-service', ()=>{
           TestUtils.createDisqualifiedPlayer(inactivePlayer),
           TestUtils.createQualifiedPlayer(playerWhoAnsweredCorrectly1), 
           TestUtils.createQualifiedPlayer(playerWhoAnsweredCorrectly2)],
-        roundStartedAt: now
+        roundStartedAt: now.valueOf()
       })
 
     })

@@ -18,7 +18,7 @@ def startNewSession(httpClient):
   session = httpClient.createSession()
   if not session:
     return None
-  print(f"new session started: sessionId({session.sessionId}), playerId({session.playerId})") 
+  print(f"new session started: sessionId({session.sessionId}), playerId({session.playerId})")
   return session
 
 def waitForPlayers(sessionInfo, httpClient):

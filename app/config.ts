@@ -7,5 +7,5 @@ interface Config {
 
 export const getConfig = (): Config => ({
   jwtSecret: process.env['JWT_SECRET'] || 'hello-worldz',
-  dynamodbEndpoint: process.env['DYNAMODB_ENDPOINT']
+  dynamodbEndpoint: process.env['AWS_DYNAMO_URL']
 })
