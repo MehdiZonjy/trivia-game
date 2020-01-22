@@ -15,18 +15,18 @@ import { ResourceNotFound, InvalidState } from './services/errors'
 import { Request as ExpRequest, Response as ExpResponse } from 'express'
 import * as Logger from './utils/logger'
 import { createGameController } from './game-controller'
-const JWT_SECRET = 'chaneg me'
+import {getConfig} from './config'
 
 const main = async () => {
+  const conf = getConfig()
 
   const questionsRepo = QuestionsRepo.createRepo()
   const responsesRepo = ResponsesReop.createRepo()
   const sessionsRepo = SessionsRepo.createSessionsRepo()
-  const authService = createAuthService({ jwtSecret: JWT_SECRET })
+  const authService = createAuthService({ jwtSecret: conf.jwtSecret })
   const dateTimeService = createDateTimeService()
   const responsesService = createResponsesSession({ responsesRepo, sessionsRepo, questionsRepo })
   const logger = Logger.createConsoleLogger()
-
   const submitResponseValidator = SubmitAnswerRequestValidator.createValidator(logger)
   //load test data
   await Promise.all(QuestionsSample.Data.map(q => questionsRepo.saveQuestion(q)))
@@ -40,7 +40,7 @@ const main = async () => {
     logger
   })
 
-  const jwtMiddleware = JWTExpress({ secret: JWT_SECRET })
+  const jwtMiddleware = JWTExpress({ secret: conf.jwtSecret })
 
   const gameController = createGameController({ logger, sessionsService, sessionsRepo })
   gameController.start()
