@@ -154,7 +154,7 @@ Response
 
 
 
-# Approach 2
+### Approach 2
 This problem seems perfect for the actor model.
 
 - Each actor would present a game session, and all players interactions become messages that are delivered to their corresponding actor.
@@ -173,7 +173,7 @@ I didn't get around to implement this, as I needed time to spike more on running
 
 
 
-### Improvements
+## Improvements
 - My Dynamodb implementation is not optimal. There are cases where i have to do a full scan of a table. This won’t scale in production. Ideally I’d create Global/Secondary Indexes
 - More tests could be added
 - There can only be a single [GameController](app/game-controller.ts). When scaling horizontally, it should be moved to its own deployment. It may also become a single point of failure in the system
