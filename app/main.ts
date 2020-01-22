@@ -206,6 +206,21 @@ const main = async () => {
   })
 
 
+  app.get('/', (res, req) => {
+    req.send(`<html>
+    <head>
+      <title>Trivia | Mzmuse</title>
+    </head>
+    <body>
+    <p>
+      Welcome to this simple implementation of Trivia game.<br/>
+      To get started just launch the client.<br/>
+      docker run -it --rm mehdizonjy/trivia-client "https://trivia.mzmuse.com" <br/>
+      Source code available at <a href="https://github.com/MehdiZonjy/trivia-game">Github</a>
+    </p>
+    <body>
+    </html>`)
+  })
 }
 
 main()
