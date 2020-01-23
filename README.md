@@ -24,7 +24,7 @@ Make sure you have docker and docker-compose setup
 
 ## Run Tests
 ```bash
-./run-test
+./run-test.sh
 ```
 
 
