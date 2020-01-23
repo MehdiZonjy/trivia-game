@@ -22,6 +22,11 @@ Make sure you have docker and docker-compose setup
 # when asked for game endpoints use http://localhost:4000
 ```
 
+## Run Tests
+```bash
+./run-test
+```
+
 
 ## Domain Model
 I'm using ADT (algebraic data types) to model my domain. There are 3 types:
