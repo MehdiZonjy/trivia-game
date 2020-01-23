@@ -2,7 +2,7 @@
 a humble implementation of Trivia game in `Node.js` and `Python`
 
 
-## Roles
+## Rules
 - Two players to start a session.
 - 10 seconds per round
 - In the sample questions i'm using `Answer 1` is always correct 
